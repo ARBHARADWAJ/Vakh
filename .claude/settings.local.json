@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Start-Process \"C:\\\\Users\\\\karth\\\\Documents\\\\GeminiCliProjects\\\\Vakh\\\\src-tauri\\\\target\\\\release\\\\vakh.exe\")",
+      "PowerShell(Get-Process *)"
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VAKH</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app" class="is-paused" data-tauri-drag-region>
+      <div class="controls">
+        <!-- Close Button -->
+        <button id="close-btn" class="icon-btn close">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </button>
+
+        <!-- Waveform Center -->
+        <div class="waveform">
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+        </div>
+
+        <!-- Toggle Button -->
+        <button id="toggle-btn" class="icon-btn toggle">
+          <!-- Play Icon (Default) -->
+          <svg id="play-icon" viewBox="0 0 24 24" width="22" height="22">
+            <path d="M5 3l14 9-14 9V3z" stroke="currentColor" fill="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+          </svg>
+          <!-- Stop Icon (Hidden initially) -->
+          <svg id="stop-icon" viewBox="0 0 24 24" width="22" height="22" style="display: none;">
+            <rect x="6" y="6" width="12" height="12" stroke="currentColor" fill="currentColor" stroke-width="2.2"/>
+          </svg>
+        </button>
+      </div>
+      <div id="status-text">PAUSED</div>
+    </div>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
