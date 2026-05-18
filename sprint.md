@@ -146,3 +146,9 @@ This file tracks the real-time progress of the VAKH project.
 - **Auto-Pause:** The app now automatically stops and transitions to 'PAUSED' (Idle) after 2.5 seconds of silence.
 - **Sentence Finalization:** Upon Auto-Pause, Thread 2 performs a single high-accuracy sweep on the complete sentence to provide a final polished version.
 - **Hallucination Control:** By scoped dictation to individual sentences (via Auto-Pause), long-term AI loops are effectively eliminated.
+
+## [0.2.5] - 2026-05-18 (Git Integration)
+- **Git Repository:** Initialized a local Git repository to manage version control.
+- **Branching Strategy:** Created 'master' for complete code and 'feature/v0.2.5-live-core' for core logic focus.
+- **Version Restoration:** Verified v0.2.5 as the primary working version with continuous context and 5s Auto-Pause.
+- **Fix Analysis:** Documented the failure of v0.2.3 'buffer wipe' and the move to v0.2.5 'Rolling Window'.
