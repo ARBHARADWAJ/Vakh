@@ -1,5 +1,5 @@
 // ============================================================
-// VAKH - Two-Threaded Context Architecture
+// VAKH - Single-Worker Context Architecture
 // ============================================================
 
 mod state;
@@ -21,8 +21,6 @@ use db::Database;
 struct AppManagedState(Arc<Mutex<AppState>>, Arc<Database>, Arc<WhisperContext>, AppConfig);
 
 enum ContextCommand {
-    AudioChunk(Vec<f32>),
-    Silence(Vec<f32>), // Trigger high-accuracy sweep on silence
     Finalize(Sender<String>),
 }
 
@@ -33,7 +31,6 @@ pub fn perform_state_transition(
     ctx: Arc<WhisperContext>,
     config: AppConfig,
 ) {
-    // Ensure window is visible on any interaction
     if let Some(window) = app_handle.get_webview_window("main") {
         let _ = window.show();
     }
@@ -54,10 +51,11 @@ pub fn perform_state_transition(
     if start_audio {
         let _ = app_handle.emit("vakh-start-listening", ());
 
-        let (tx, rx) = channel::<Vec<f32>>();
+        let (tx1, rx1) = channel::<Vec<f32>>(); // VAD Gated (for State Manager)
+        let (tx2, rx2) = channel::<Vec<f32>>(); // Raw Stream (for AI Worker)
         let (status_tx, status_rx) = channel::<AudioStatus>();
 
-        match audio::AudioProcessor::start_listening(tx, status_tx) {
+        match audio::AudioProcessor::start_listening(tx1, tx2, status_tx) {
             Ok(stream) => {
                 {
                     let mut app_state = state.lock().unwrap_or_else(|e| e.into_inner());
@@ -70,10 +68,15 @@ pub fn perform_state_transition(
                 let handle_for_thread = app_handle.clone();
                 let config_for_thread = config.clone();
 
-                // Capture target app name once, before the thread spawns
                 let (target_app_name, target_hwnd) = {
                     let mut s = state_for_thread.lock().unwrap_or_else(|e| e.into_inner());
-                    let hwnd = hooks::get_foreground_window_ignoring_vakh();
+                    
+                    // Use existing HWND if captured by hotkey, otherwise find it
+                    let hwnd = match s.target_hwnd {
+                        Some(h) if h != 0 => h,
+                        _ => hooks::get_foreground_window_ignoring_vakh(),
+                    };
+
                     let name = hooks::get_process_name(hwnd)
                         .unwrap_or_else(|| "Unknown App".to_string());
                     println!("[Injection] Target: {} (hwnd={})", name, hwnd);
@@ -82,34 +85,33 @@ pub fn perform_state_transition(
                 };
 
                 std::thread::spawn(move || {
-                    let mut whisper_state = match ctx_for_thread.create_state() {
-                        Ok(s)  => s,
-                        Err(e) => { eprintln!("[AI Error] State creation failed: {:?}", e); return; }
-                    };
+                    let injector = Arc::new(Mutex::new(TextInjector::new(Some(target_hwnd))));
 
-                    let mut injector = TextInjector::new(Some(target_hwnd));
-
-                    const PROCESS_STEP: usize  = 16_000 * 1; // 1.0s heartbeat
-
-                    // --- THREAD 2: Context Thread (High Accuracy Polish) ---
+                    // --- WORKER THREAD: Context Thread (High Accuracy Accumulator) ---
                     let (ctx_tx, ctx_rx) = channel::<ContextCommand>();
                     let ctx_context = Arc::clone(&ctx_for_thread);
                     let ctx_config = config_for_thread.clone();
-                    let handle_for_ctx = handle_for_thread.clone();
-                    
+                    let db_for_worker = Arc::clone(&db_for_thread);
+                    let app_name_for_worker = target_app_name.clone();
+
+                    let injector_for_worker = Arc::clone(&injector);
+
                     std::thread::spawn(move || {
                         let mut ctx_state = match ctx_context.create_state() {
                             Ok(s)  => s,
                             Err(e) => { eprintln!("[AI Error] Context State failed: {:?}", e); return; }
                         };
 
-                        let mut full_session_audio: Vec<f32> = Vec::with_capacity(16000 * 300);
-                        let lang = ctx_config.language.clone();
+                        let mut full_session_audio: Vec<f32> = Vec::with_capacity(16000 * 25);
+                        
+                        // Independent Audio Collection from RX2
+                        let worker_audio_rx = rx2;
+                        
                         let final_params = {
                             let mut p = FullParams::new(SamplingStrategy::BeamSearch {
                                 beam_size: 5, patience: 2.0,
                             });
-                            p.set_language(Some(&lang));
+                            p.set_language(Some("en"));
                             p.set_n_threads(ctx_config.threads);
                             p.set_print_special(false);
                             p.set_print_progress(false);
@@ -118,77 +120,107 @@ pub fn perform_state_transition(
                             p
                         };
 
-                        while let Ok(cmd) = ctx_rx.recv() {
-                            match cmd {
-                                ContextCommand::AudioChunk(samples) => {
-                                    full_session_audio.extend_from_slice(&samples);
-                                }
-                                ContextCommand::Silence(_) => {
-                                    // Triggered on Auto-Pause or manual stop
-                                    if let Ok(_) = ctx_state.full(final_params.clone(), &full_session_audio) {
-                                        let high_accuracy_text = collect_segments(&mut ctx_state);
-                                        let _ = handle_for_ctx.emit("vakh-correction", high_accuracy_text);
+                        loop {
+                            // 1. Collect all available raw audio
+                            while let Ok(samples) = worker_audio_rx.try_recv() {
+                                full_session_audio.extend_from_slice(&samples);
+                            }
+
+                            // 2. Periodic 20-second transcribing & appending
+                            if full_session_audio.len() >= 16000 * 20 {
+                                println!("[Worker] Periodic 20s append trigger: {} samples", full_session_audio.len());
+                                if let Ok(_) = ctx_state.full(final_params.clone(), &full_session_audio) {
+                                    let chunk_text = collect_segments(&mut ctx_state);
+                                    println!("[Worker] Periodic transcribed text: '{}'", chunk_text);
+                                    if !chunk_text.is_empty() {
+                                        let mut inj = injector_for_worker.lock().unwrap_or_else(|e| e.into_inner());
+                                        inj.inject_draft(&chunk_text);
+                                        inj.commit();
+                                        let _ = db_for_worker.log_dictation(&chunk_text, Some(&app_name_for_worker));
                                     }
                                 }
-                                ContextCommand::Finalize(reply_tx) => {
-                                    if let Ok(_) = ctx_state.full(final_params.clone(), &full_session_audio) {
-                                        let final_text = collect_segments(&mut ctx_state);
+                                full_session_audio.clear();
+                            }
+
+                            // 3. Check for commands (Finalize)
+                            if let Ok(cmd) = ctx_rx.try_recv() {
+                                match cmd {
+                                    ContextCommand::Finalize(reply_tx) => {
+                                        println!("[Worker] Finalize trigger: {} samples", full_session_audio.len());
+                                        let mut final_text = String::new();
+                                        if full_session_audio.len() >= 8_000 {
+                                            if let Ok(_) = ctx_state.full(final_params.clone(), &full_session_audio) {
+                                                final_text = collect_segments(&mut ctx_state);
+                                            }
+                                        }
+                                        println!("[Worker] Final transcribed text: '{}'", final_text);
+                                        full_session_audio.clear();
                                         let _ = reply_tx.send(final_text);
-                                    } else {
-                                        let _ = reply_tx.send(String::new());
+                                        break; 
                                     }
-                                    break;
                                 }
                             }
+                            std::thread::sleep(std::time::Duration::from_millis(10));
                         }
                     });
 
-                    // --- THREAD 1: Main Worker (Fast Live Draft) ---
-                    let lang_greedy = config_for_thread.language.clone();
-                    let params = {
-                        let mut p = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
-                        p.set_language(Some(&lang_greedy));
-                        p.set_n_threads(config_for_thread.threads);
-                        p.set_print_special(false);
-                        p.set_print_progress(false);
-                        p.set_print_realtime(false);
-                        p.set_print_timestamps(false);
-                        p
-                    };
+                    // Helper closure to run finalize and inject result
+                    let run_finalize = |injector: &Arc<Mutex<TextInjector>>,
+                                        ctx_tx: &std::sync::mpsc::Sender<ContextCommand>,
+                                        handle: &AppHandle,
+                                        db: &Arc<Database>,
+                                        app_name: &str| {
+                        let _ = handle.emit("vakh-status", AudioStatus::Finalizing);
 
-                    let mut audio_buffer: Vec<f32> = Vec::with_capacity(16000 * 60);
-                    let mut last_processed_len: usize = 0;
+                        let (reply_tx, reply_rx) = channel::<String>();
+                        let _ = ctx_tx.send(ContextCommand::Finalize(reply_tx));
 
-                    loop {
-                        let mut auto_halt = false;
-                        while let Ok(status) = status_rx.try_recv() {
-                            if let AudioStatus::Idle = status {
-                                println!("[System] Auto-Pause detected");
-                                auto_halt = true;
-                            }
-                            let _ = handle_for_thread.emit("vakh-status", status);
-                        }
-                        if auto_halt { break; }
-
-                        match rx.recv_timeout(std::time::Duration::from_millis(100)) {
-                            Ok(samples) => {
-                                audio_buffer.extend_from_slice(&samples);
-                                let _ = ctx_tx.send(ContextCommand::AudioChunk(samples));
-
-                                if audio_buffer.len() >= last_processed_len + PROCESS_STEP {
-                                    if let Ok(_) = whisper_state.full(params.clone(), &audio_buffer) {
-                                        let draft_text = collect_segments(&mut whisper_state);
-                                        if !draft_text.is_empty() {
-                                            // Real-time localized backspacing injection
-                                            injector.inject_draft(&draft_text);
-                                            last_processed_len = audio_buffer.len();
-                                        }
-                                    }
+                        match reply_rx.recv_timeout(std::time::Duration::from_secs(60)) {
+                            Ok(final_text) => {
+                                println!("[Finalize] Result: '{}'", final_text);
+                                if !final_text.is_empty() {
+                                    let mut inj = injector.lock().unwrap_or_else(|e| e.into_inner());
+                                    inj.inject_draft(&final_text);
+                                    inj.commit();
+                                    let _ = db.log_dictation(&final_text, Some(app_name));
                                 }
                             }
-                            Err(std::sync::mpsc::RecvTimeoutError::Timeout)      => (),
-                            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                            Err(_) => {}
                         }
+                    };
+
+                    // --- MAIN LOOP: VAD & State Router ---
+                    let mut auto_halt = false;
+                    let session_start = std::time::Instant::now();
+                    loop {
+                        if session_start.elapsed() >= std::time::Duration::from_secs(300) {
+                            println!("[System] 5-minute safety limit reached. Auto-halting.");
+                            auto_halt = true;
+                        }
+
+                        while let Ok(status) = status_rx.try_recv() {
+                            match status {
+                                AudioStatus::Idle => {
+                                    println!("[System] Auto-Stop (7s silence)");
+                                    auto_halt = true;
+                                }
+                                _ => {
+                                    let _ = handle_for_thread.emit("vakh-status", status);
+                                }
+                            }
+                        }
+
+                        if auto_halt {
+                            {
+                                let mut s = state_for_thread.lock().unwrap_or_else(|e| e.into_inner());
+                                if let Some(SendWrapper(stream)) = s.audio_stream.take() { drop(stream); }
+                            }
+                            run_finalize(&injector, &ctx_tx, &handle_for_thread, &db_for_thread, &target_app_name);
+                            break;
+                        }
+
+                        // Drain RX1 just to keep it alive (VAD already processed by AudioProcessor)
+                        while let Ok(_) = rx1.try_recv() {}
 
                         let current_state = {
                             let s = state_for_thread.lock().unwrap_or_else(|e| e.into_inner());
@@ -197,31 +229,16 @@ pub fn perform_state_transition(
                         if current_state == VakhState::Idle || current_state == VakhState::Flushing {
                             break;
                         }
+                        std::thread::sleep(std::time::Duration::from_millis(50));
                     }
 
-                    // --- STOP SEQUENCE: Finalizing (Polish) ---
-                    let _ = handle_for_thread.emit("vakh-status", AudioStatus::Finalizing);
-
-                    let (reply_tx, reply_rx) = channel::<String>();
-                    let _ = ctx_tx.send(ContextCommand::Finalize(reply_tx));
-                    
-                    if let Ok(final_text) = reply_rx.recv_timeout(std::time::Duration::from_secs(15)) {
-                        if !final_text.is_empty() {
-                            // Final polished text replaces the draft
-                            injector.inject_draft(&final_text);
-                            injector.commit();
-
-                            let _ = db_for_thread.log_dictation(
-                                &final_text,
-                                Some(&target_app_name),
-                            );
-                        } else {
-                            injector.commit();
-                        }
+                    if !auto_halt {
+                        run_finalize(&injector, &ctx_tx, &handle_for_thread, &db_for_thread, &target_app_name);
                     }
 
                     let mut s = state_for_thread.lock().unwrap_or_else(|e| e.into_inner());
                     s.transition_to(VakhState::Idle);
+                    s.target_hwnd = None;
                     let _ = handle_for_thread.emit("vakh-status", AudioStatus::Idle);
                 });
             }
@@ -237,6 +254,7 @@ pub fn perform_state_transition(
             drop(stream);
         }
         app_state.transition_to(VakhState::Idle);
+        app_state.target_hwnd = None;
         let _ = app_handle.emit("vakh-status", AudioStatus::Idle);
     }
 }
@@ -251,22 +269,22 @@ fn collect_segments(whisper_state: &mut whisper_rs::WhisperState) -> String {
         if let Ok(raw) = segment.to_str() {
             let cleaned = raw.trim();
             if cleaned.is_empty() || cleaned.starts_with('[') { continue; }
-            
+
             let lower = cleaned.to_lowercase();
-            // Only filter if it's a known short-form hallucination and exactly matches
+            if lower.contains("blank_audio") || lower.contains("[blank_audio]") || lower.trim() == ">>" {
+                continue;
+            }
+
             if cleaned.len() < 10 && HALLUCINATIONS.iter().any(|h| lower == *h) { continue; }
-            
-            // Check if segment actually contains characters
             if !cleaned.chars().any(|c| c.is_alphanumeric()) { continue; }
-            
+
             segments.push(cleaned.to_string());
         }
     }
 
     let mut result = segments.join(" ");
     if result.trim().is_empty() { return String::new(); }
-    
-    // Capitalize first letter
+
     if let Some(first) = result.chars().next() {
         let upper: String = first.to_uppercase().collect();
         result = upper + &result[first.len_utf8()..];
@@ -331,20 +349,19 @@ pub fn run() {
             if let Some(window) = app.get_webview_window("main") {
                 let window_clone = window.clone();
                 std::thread::spawn(move || {
-                    // Give the OS a moment to settle the window size
                     std::thread::sleep(std::time::Duration::from_millis(200));
-                    
+
                     if let Ok(Some(monitor)) = window_clone.current_monitor() {
                         let screen_size = monitor.size();
                         let scale_factor = monitor.scale_factor();
-                        
+
                         if let Ok(window_size) = window_clone.outer_size() {
                             let x = (screen_size.width as i32 - window_size.width as i32) / 2;
-                            // Move it slightly higher (150px) to avoid taskbar overlap on some Win10 setups
                             let y = screen_size.height as i32 - window_size.height as i32 - (150.0 * scale_factor) as i32;
-                            
-                            println!("[Window] Screen: {}x{}, Window: {}x{}, Position: {},{}", 
-                                screen_size.width, screen_size.height, window_size.width, window_size.height, x, y);
+
+                            println!("[Window] Screen: {}x{}, Window: {}x{}, Position: {},{}",
+                                screen_size.width, screen_size.height,
+                                window_size.width, window_size.height, x, y);
 
                             let _ = window_clone.set_position(tauri::PhysicalPosition { x, y });
                             let _ = window_clone.show();

@@ -59,6 +59,14 @@ window.addEventListener("DOMContentLoaded", () => {
       appEl.classList.remove("is-warning");
       appEl.classList.remove("is-finalizing");
       appEl.classList.remove("is-processing");
+      appEl.classList.remove("is-listening");
+      appEl.classList.add("is-speaking");
+      statusTextEl.innerText = "SPEAKING";
+    } else if (data.status === "listening") {
+      appEl.classList.remove("is-warning");
+      appEl.classList.remove("is-finalizing");
+      appEl.classList.remove("is-processing");
+      appEl.classList.remove("is-speaking");
       appEl.classList.add("is-listening");
       statusTextEl.innerText = "LISTENING";
     } else if (data.status === "finalizing") {
@@ -90,13 +98,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // Update waveform bars based on audio level
   function updateWaveform(level) {
-    // Toggle speaking class based on level threshold
-    if (level > 0.01) {
-      appEl.classList.add("is-speaking");
-    } else {
-      appEl.classList.remove("is-speaking");
-    }
-
     const baseHeights = [20, 35, 25, 40, 15];
     const maxHeights = [45, 48, 42, 48, 40];
 

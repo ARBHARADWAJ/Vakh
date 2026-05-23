@@ -17,9 +17,8 @@ pub enum VakhState {
 #[serde(tag = "status", rename_all = "lowercase")]
 pub enum AudioStatus {
     Active,
-    Warning { duration: u32 },
+    Listening,
     Finalizing,
-    Processing,
     Idle,
     Level { level: f32 },
 }

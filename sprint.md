@@ -89,6 +89,43 @@ This file tracks the real-time progress of the VAKH project.
 
 ## Development Log & Updates
 
+### Friday, 22 May 2026 (Today)
+
+**17:30 - Dynamic Universal Injection**
+- [x] **Active Window Targeting:** Refactored `TextInjector` to dynamically target the `GetForegroundWindow()` at the moment of injection.
+    - *Why:* Ensures text is injected into the panel you are currently looking at, not just the one captured at the start of the session.
+- [x] **Environment Cleanup:** Terminated background Tauri development processes.
+
+**17:00 - Independent Audio Architecture (Dual-Stream)**
+- [x] **Mic Broadcast:** Refactored `AudioProcessor` to broadcast to two independent channels (TX1 and TX2).
+- [x] **Decoupled Worker:** Thread 2 (AI Worker) now receives raw audio directly from the mic, bypassing Thread 1 entirely.
+    - *Why:* Prevents data loss during finalization. Even if Thread 1 stops early, Thread 2 already has the full audio session in its own independent buffer.
+- [x] **Context Expansion:** Increased chunk size to 60s and overlap to 10s for significantly better transcription context.
+- [x] **Accuracy Recovery:** Re-enabled `BeamSearch` (size: 5) to restore the "Pro" high-fidelity transcription quality.
+- [x] **Log Precision:** Added log reporting for total session samples collected to verify 100% data integrity.
+
+**16:30 - Threshold Expansion & Speed Optimization**
+- [x] **Extended Thresholds:** Increased `SHORT_PAUSE` to 10s and `LONG_SILENCE` to 20s.
+    - *Why:* Prevent premature cut-offs and give the user more time to speak naturally.
+- [x] **Speed Optimization:** Switched Whisper sampling strategy from `BeamSearch` to `Greedy`.
+    - *Why:* Dramatically reduces "Thinking" time, providing the fastest possible transcription.
+- [x] **Log Updates:** Synchronized internal logs to reflect the new 10s thinking threshold.
+
+**16:00 - Verbose Injection & Immediate Feedback**
+- [x] **Visual Heartbeat:** Implemented immediate injection of `..` into the target field when finalization begins.
+    - *Why:* Provides instant tactile feedback to the user that the AI is processing their voice.
+- [x] **Verbose Logging:** Added deep logging to `injection.rs` to print exactly how many backspaces and characters are sent via Win32.
+- [x] **Success/Failure Tracking:** Integrated return-code validation for `SendInput` with terminal error reporting.
+- [x] **AI Loop Cleanup:** Added logic to automatically clear the `..` feedback if the AI returns an empty string or times out.
+
+**15:30 - Halting Stability & Injection Diagnostics**
+- [x] **VAD Timing Alignment:** Synchronized `SHORT_PAUSE` (6s) and `LONG_SILENCE` (12s) logs with code constants in `audio.rs`.
+- [x] **Injection Robustness:** Refactored `perform_state_transition` to use the hotkey-captured `target_hwnd` instead of re-capturing after `window.show()`.
+    - *Why:* Prevented race conditions where focus shifts to Vakh's own window before the target window is re-captured.
+- [x] **Window Detection:** Made `get_foreground_window_ignoring_vakh` case-insensitive for both title and class name checks.
+- [x] **Fidelity Diagnostics:** Added comprehensive logging for Whisper worker thread (audio length, chunk count) and main thread (final text length, transcription result).
+- [x] **Timeout Extension:** Increased transcription `recv_timeout` from 30s to 60s to accommodate long-session BeamSearch processing.
+
 ### Saturday, 16 May 2026 (Today)
 
 **17:45 - Production Readiness & 5-Minute Sessions**
