@@ -17,8 +17,19 @@ pub fn get_foreground_window_ignoring_vakh() -> isize {
         // Loop to find the first visible window that isn't VAKH or a system tray
         while hwnd != 0 {
             let (title, class) = get_window_details(hwnd as isize);
-            let is_vakh = title.contains("VAKH") || class.contains("Tauri");
-            let is_system = class == "Shell_TrayWnd" || class == "WorkerW" || class == "Progman";
+            let title_lower = title.to_lowercase();
+            let class_lower = class.to_lowercase();
+            
+            let proc_name = get_process_name(hwnd as isize)
+                .unwrap_or_else(|| "".to_string())
+                .to_lowercase();
+            
+            let is_vakh = title_lower.contains("vakh") 
+                || class_lower.contains("tauri") 
+                || proc_name.contains("vakh")
+                || proc_name.contains("tauri");
+                
+            let is_system = class_lower == "shell_traywnd" || class_lower == "workerw" || class_lower == "progman";
             
             if !is_vakh && !is_system && IsWindowVisible(hwnd) != 0 {
                 return hwnd as isize;

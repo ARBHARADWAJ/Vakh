@@ -1,19 +1,20 @@
 use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
-    SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VK_BACK
+    SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VK_BACK,
+    VK_LCONTROL, VK_RCONTROL, VK_LSHIFT, VK_RSHIFT, VK_LMENU, VK_RMENU
 };
-use windows_sys::Win32::UI::WindowsAndMessaging::SetForegroundWindow;
+use windows_sys::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
 use std::mem::size_of;
 
 pub struct TextInjector {
     current_draft: String,
-    target_hwnd: Option<isize>,
+    _target_hwnd: Option<isize>,
 }
 
 impl TextInjector {
     pub fn new(target_hwnd: Option<isize>) -> Self {
         Self {
             current_draft: String::new(),
-            target_hwnd,
+            _target_hwnd: target_hwnd,
         }
     }
 
@@ -33,17 +34,38 @@ impl TextInjector {
             }
         }
 
-        // OPTIMIZATION: If the change is at the very end and only adds text, 
-        // don't backspace anything.
-        let mut inputs = Vec::new();
+        unsafe {
+            // Send keystrokes directly to the currently active foreground window 
+            // where the user's cursor is focused, without yanking focus back.
 
-        if common_prefix_len < old_text.len() {
-            // Backspace the characters that changed
-            let old_suffix = &old_text[common_prefix_len..];
-            let backspace_count = old_suffix.chars().count();
-            
-            for _ in 0..backspace_count {
-                unsafe {
+            // Programmatically release modifier keys (Ctrl, Shift, Alt)
+            let modifiers = [
+                VK_LCONTROL, VK_RCONTROL,
+                VK_LSHIFT, VK_RSHIFT,
+                VK_LMENU, VK_RMENU
+            ];
+            let mut modifier_inputs = Vec::new();
+            for &vk in &modifiers {
+                let mut input: INPUT = std::mem::zeroed();
+                input.r#type = INPUT_KEYBOARD;
+                input.Anonymous.ki = KEYBDINPUT {
+                    wVk: vk,
+                    wScan: 0,
+                    dwFlags: KEYEVENTF_KEYUP,
+                    time: 0,
+                    dwExtraInfo: 0,
+                };
+                modifier_inputs.push(input);
+            }
+            SendInput(modifier_inputs.len() as u32, modifier_inputs.as_ptr(), size_of::<INPUT>() as i32);
+
+            // 2. Send Backspaces for changed characters
+            if common_prefix_len < old_text.len() {
+                let old_suffix = &old_text[common_prefix_len..];
+                let backspace_count = old_suffix.chars().count();
+                println!("[Injection] Pacing {} backspaces", backspace_count);
+                
+                for _ in 0..backspace_count {
                     let mut input_down: INPUT = std::mem::zeroed();
                     input_down.r#type = INPUT_KEYBOARD;
                     input_down.Anonymous.ki = KEYBDINPUT {
@@ -62,46 +84,47 @@ impl TextInjector {
                         time: 0,
                         dwExtraInfo: 0,
                     };
-                    inputs.push(input_down);
-                    inputs.push(input_up);
+                    
+                    SendInput(1, &input_down, size_of::<INPUT>() as i32);
+                    std::thread::sleep(std::time::Duration::from_millis(5)); // let the down state register
+                    SendInput(1, &input_up, size_of::<INPUT>() as i32);
+                    std::thread::sleep(std::time::Duration::from_millis(8)); // interval between backspaces
                 }
-            }
-        }
 
-        // 3. Type the new part
-        let new_part = &new_text[common_prefix_len..];
-        for c in new_part.encode_utf16() {
-            unsafe {
-                let mut input_down: INPUT = std::mem::zeroed();
-                input_down.r#type = INPUT_KEYBOARD;
-                input_down.Anonymous.ki = KEYBDINPUT {
-                    wVk: 0,
-                    wScan: c,
-                    dwFlags: KEYEVENTF_UNICODE,
-                    time: 0,
-                    dwExtraInfo: 0,
-                };
-                let mut input_up: INPUT = std::mem::zeroed();
-                input_up.r#type = INPUT_KEYBOARD;
-                input_up.Anonymous.ki = KEYBDINPUT {
-                    wVk: 0,
-                    wScan: c,
-                    dwFlags: KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
-                    time: 0,
-                    dwExtraInfo: 0,
-                };
-                inputs.push(input_down);
-                inputs.push(input_up);
+                // Crucial: sleep 25ms to let the OS and target app completely finish backspacing
+                // before we type the new characters. This avoids scrambled/backward text.
+                std::thread::sleep(std::time::Duration::from_millis(25));
             }
-        }
 
-        // 4. Send the batch
-        if !inputs.is_empty() {
-            unsafe {
-                if let Some(hwnd) = self.target_hwnd {
-                    SetForegroundWindow(hwnd as _);
+            // 3. Paced typing of the new part
+            let new_part = &new_text[common_prefix_len..];
+            if !new_part.is_empty() {
+                println!("[Injection] Pacing type for: '{}'", new_part);
+                for c in new_part.encode_utf16() {
+                    let mut input_down: INPUT = std::mem::zeroed();
+                    input_down.r#type = INPUT_KEYBOARD;
+                    input_down.Anonymous.ki = KEYBDINPUT {
+                        wVk: 0,
+                        wScan: c,
+                        dwFlags: KEYEVENTF_UNICODE,
+                        time: 0,
+                        dwExtraInfo: 0,
+                    };
+                    let mut input_up: INPUT = std::mem::zeroed();
+                    input_up.r#type = INPUT_KEYBOARD;
+                    input_up.Anonymous.ki = KEYBDINPUT {
+                        wVk: 0,
+                        wScan: c,
+                        dwFlags: KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
+                        time: 0,
+                        dwExtraInfo: 0,
+                    };
+                    
+                    SendInput(1, &input_down, size_of::<INPUT>() as i32);
+                    std::thread::sleep(std::time::Duration::from_millis(5)); // let the down state register
+                    SendInput(1, &input_up, size_of::<INPUT>() as i32);
+                    std::thread::sleep(std::time::Duration::from_millis(8)); // interval between characters
                 }
-                SendInput(inputs.len() as u32, inputs.as_ptr(), size_of::<INPUT>() as i32);
             }
         }
 

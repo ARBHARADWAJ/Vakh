@@ -12,7 +12,7 @@ impl Default for AppConfig {
     fn default() -> Self {
         Self {
             language: "en".to_string(),
-            threads: 4,
+            threads: 2,
         }
     }
 }
