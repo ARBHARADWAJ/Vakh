@@ -3,9 +3,16 @@ use std::path::PathBuf;
 use std::fs;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(default)]
 pub struct AppConfig {
     pub language: String,
     pub threads: i32,
+    pub silence_timeout: f32,
+    pub typing_delay: u64,
+    pub backspace_delay: u64,
+    pub vad_sensitivity: i32,
+    pub capsule_opacity: f32,
+    pub theme: String,
 }
 
 impl Default for AppConfig {
@@ -13,6 +20,12 @@ impl Default for AppConfig {
         Self {
             language: "en".to_string(),
             threads: 2,
+            silence_timeout: 7.0,
+            typing_delay: 8,
+            backspace_delay: 25,
+            vad_sensitivity: 0, // Quality mode
+            capsule_opacity: 0.85,
+            theme: "default".to_string(),
         }
     }
 }

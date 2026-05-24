@@ -10,12 +10,25 @@
     "withGlobalTauri": true,
     "windows": [
       {
+        "label": "main",
         "title": "VAKH",
-        "width": 260,
-        "height": 100,
+        "width": 240,
+        "height": 48,
         "transparent": true,
         "decorations": false,
-        "alwaysOnTop": true
+        "alwaysOnTop": true,
+        "resizable": false
+      },
+      {
+        "label": "dashboard",
+        "title": "VAKH Dashboard",
+        "url": "dashboard.html",
+        "width": 800,
+        "height": 550,
+        "transparent": true,
+        "decorations": false,
+        "visible": false,
+        "alwaysOnTop": false
       }
     ],
     "security": {

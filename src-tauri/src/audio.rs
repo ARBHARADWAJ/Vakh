@@ -17,11 +17,24 @@ pub struct AudioProcessor {
     voice_activation_counter: usize,
     warmup_counter: usize,
     status_tx: Option<Sender<AudioStatus>>,
+    long_silence_frames: usize,
 }
 
 impl AudioProcessor {
-    pub fn new(input_sample_rate: u32, status_tx: Option<Sender<AudioStatus>>) -> Self {
-        let vad = Vad::new_with_rate_and_mode(SampleRate::Rate16kHz, VadMode::Quality);
+    pub fn new(
+        input_sample_rate: u32,
+        status_tx: Option<Sender<AudioStatus>>,
+        vad_sensitivity: i32,
+        silence_timeout: f32
+    ) -> Self {
+        let vad_mode = match vad_sensitivity {
+            1 => VadMode::LowBitrate,
+            2 => VadMode::Aggressive,
+            3 => VadMode::VeryAggressive,
+            _ => VadMode::Quality,
+        };
+        let vad = Vad::new_with_rate_and_mode(SampleRate::Rate16kHz, vad_mode);
+        let long_silence_frames = (silence_timeout * 100.0) as usize;
 
         Self {
             vad,
@@ -35,13 +48,16 @@ impl AudioProcessor {
             voice_activation_counter: 0,
             warmup_counter: 0,
             status_tx,
+            long_silence_frames,
         }
     }
 
     pub fn start_listening(
         tx1: Sender<Vec<f32>>,
         tx2: Sender<Vec<f32>>,
-        status_tx: Sender<AudioStatus>
+        status_tx: Sender<AudioStatus>,
+        vad_sensitivity: i32,
+        silence_timeout: f32
     ) -> Result<cpal::Stream, String> {
         let host = cpal::default_host();
         let device = host.default_input_device().ok_or("No input device found")?;
@@ -57,7 +73,7 @@ impl AudioProcessor {
         let (raw_tx, raw_rx) = std::sync::mpsc::channel::<Vec<f32>>();
 
         std::thread::spawn(move || {
-            let mut processor = Self::new(sample_rate, Some(status_tx));
+            let mut processor = Self::new(sample_rate, Some(status_tx), vad_sensitivity, silence_timeout);
             while let Ok(data) = raw_rx.recv() {
                 processor.process_audio(&data, channels, &tx1, &tx2);
             }
@@ -99,8 +115,9 @@ impl AudioProcessor {
         let mono_data: Vec<f32> = if channels > 1 {
             data.chunks(channels as usize)
                 .map(|chunk| {
-                    let sum: f32 = chunk.iter().sum();
-                    sum.clamp(-1.0, 1.0)
+                    // Take the primary channel (chunk[0]) to prevent phase cancellation 
+                    // on digital noise-cancelling laptop microphone arrays.
+                    chunk[0]
                 })
                 .collect()
         } else {
@@ -132,7 +149,6 @@ impl AudioProcessor {
         }
 
         let frame_size = 160;
-        const LONG_SILENCE:   usize = 700; // ~7s auto-stop
         const HANGOVER_LIMIT: usize = 25;  // 250ms hangover
 
         while self.frame_buffer.len() >= frame_size {
@@ -197,10 +213,10 @@ impl AudioProcessor {
                                 }
                             }
 
-                            if self.silence_counter >= LONG_SILENCE {
+                            if self.silence_counter >= self.long_silence_frames {
                                 self.is_speech_active = false;
                                 self.silence_counter = 0;
-                                println!("[VAD] Auto-Stop — 7s silence");
+                                println!("[VAD] Auto-Stop — {}s silence", self.long_silence_frames as f32 / 100.0);
                                 if let Some(ref tx) = self.status_tx {
                                     let _ = tx.send(AudioStatus::Idle);
                                 }
