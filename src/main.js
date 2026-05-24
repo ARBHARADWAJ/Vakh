@@ -17,7 +17,48 @@ window.addEventListener("DOMContentLoaded", () => {
   // Get all waveform bars
   waveformBars = document.querySelectorAll(".waveform .bar");
 
+  // Handle dragging the window from anywhere on the capsule except buttons
+  appEl.addEventListener("mousedown", (e) => {
+    if (e.target.tagName !== "BUTTON" && !e.target.closest("button") && !e.target.closest(".icon-btn")) {
+      invoke("start_dragging");
+    }
+  });
+
   toggleBtn.addEventListener("click", () => toggleListening());
+
+  const dashboardBtn = document.querySelector("#dashboard-btn");
+  if (dashboardBtn) {
+    dashboardBtn.addEventListener("click", () => {
+      invoke("open_dashboard");
+    });
+  }
+
+  // Load config & apply theme/opacity on startup
+  async function applyConfig() {
+    try {
+      const config = await invoke("get_config");
+      updateThemeAndOpacity(config);
+    } catch (err) {
+      console.error("Failed to load config:", err);
+    }
+  }
+  applyConfig();
+
+  // Listen for config changes from backend
+  window.__TAURI__.event.listen("vakh-config-changed", (event) => {
+    updateThemeAndOpacity(event.payload);
+  });
+
+  function updateThemeAndOpacity(config) {
+    if (!config) return;
+    if (appEl) {
+      appEl.style.background = `rgba(10, 10, 12, ${config.capsule_opacity})`;
+      
+      // Clear theme classes and apply selected theme
+      appEl.className = appEl.className.split(" ").filter(c => !c.startsWith("theme-")).join(" ");
+      appEl.classList.add(`theme-${config.theme}`);
+    }
+  }
 
   document.querySelector("#close-btn").addEventListener("click", () => {
     hideWindow();
@@ -98,8 +139,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // Update waveform bars based on audio level
   function updateWaveform(level) {
-    const baseHeights = [20, 35, 25, 40, 15];
-    const maxHeights = [45, 48, 42, 48, 40];
+    const baseHeights = [8, 14, 10, 16, 6];
+    const maxHeights = [16, 22, 18, 24, 14];
 
     waveformBars.forEach((bar, index) => {
       const minHeight = baseHeights[index];

@@ -84,7 +84,7 @@ use tauri::AppHandle;
 
 use whisper_rs::WhisperContext;
 
-pub fn start_hotkey_listener(handle: AppHandle, state: Arc<Mutex<AppState>>, db: Arc<Database>, ctx: Arc<WhisperContext>, config: AppConfig) {
+pub fn start_hotkey_listener(handle: AppHandle, state: Arc<Mutex<AppState>>, db: Arc<Database>, ctx: Arc<WhisperContext>, config: Arc<Mutex<AppConfig>>) {
     let mut last_ctrl_press = Instant::now() - Duration::from_secs(10);
     
     std::thread::spawn(move || {

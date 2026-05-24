@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VAKH Dashboard & Settings</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <div id="dashboard-app">
+    <!-- Custom Draggable Title Bar -->
+    <div class="title-bar" data-tauri-drag-region>
+      <div class="brand" data-tauri-drag-region>
+        <span class="logo">V</span>
+        <span class="title" data-tauri-drag-region>VAKH Dashboard</span>
+      </div>
+      <div class="window-controls">
+        <button id="min-btn" class="win-btn">
+          <svg viewBox="0 0 24 24" width="12" height="12">
+            <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button id="close-btn" class="win-btn close">
+          <svg viewBox="0 0 24 24" width="12" height="12">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Sidebar -->
+    <div class="sidebar">
+      <nav class="nav-links">
+        <a href="#" class="nav-link active" data-tab="overview">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="9"></rect>
+            <rect x="14" y="3" width="7" height="5"></rect>
+            <rect x="14" y="12" width="7" height="9"></rect>
+            <rect x="3" y="16" width="7" height="5"></rect>
+          </svg>
+          Overview
+        </a>
+        <a href="#" class="nav-link" data-tab="history">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          History Logs
+        </a>
+        <a href="#" class="nav-link" data-tab="settings">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path>
+          </svg>
+          Settings
+        </a>
+        <a href="#" class="nav-link" data-tab="themes">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.0434 16.4525C3.2209 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8273C2.3932 20.5312 3.0152 21.1532 3.71906 20.9649L5.94582 20.3693C6.33027 20.2664 6.73758 20.3255 7.09386 20.503C8.43481 21.1708 9.94665 21.5 12 21.5V22Z"></path>
+            <path d="M7.5 10.5C8.32843 10.5 9 9.82843 9 9C9 8.17157 8.32843 7.5 7.5 7.5C6.67157 7.5 6 8.17157 6 9C6 9.82843 6.67157 10.5 7.5 10.5Z"></path>
+            <path d="M11.5 7.5C12.3284 7.5 13 6.82843 13 6C13 5.17157 12.3284 4.5 11.5 4.5C10.6716 4.5 10 5.17157 10 6C10 6.82843 10.6716 7.5 11.5 7.5Z"></path>
+            <path d="M16.5 9.5C17.3284 9.5 18 8.82843 18 8C18 7.17157 17.3284 6.5 16.5 6.5C15.6716 6.5 15 7.17157 15 8C15 8.82843 15.6716 9.5 16.5 9.5Z"></path>
+          </svg>
+          Themes
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        VAKH v0.2.0
+      </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <div class="content-container">
+      <!-- 1. Overview Tab -->
+      <div id="tab-overview" class="tab-pane active">
+        <h1 class="page-title">Overview</h1>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Total Transcriptions</span>
+            <span id="stat-sessions" class="stat-value">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Total Words Dictated</span>
+            <span id="stat-words" class="stat-value">0</span>
+          </div>
+        </div>
+
+        <div class="chart-section">
+          <h2>Top Targeted Applications</h2>
+          <div id="top-apps-list" class="apps-progress-list">
+            <!-- Dynamically generated app bars -->
+            <div class="empty-state">No target apps captured yet. Dictate into any window to see stats here!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. History Tab -->
+      <div id="tab-history" class="tab-pane">
+        <div class="page-header-actions">
+          <h1 class="page-title">History Logs</h1>
+          <div class="header-buttons">
+            <input type="text" id="history-search" placeholder="Search dictations...">
+            <button id="clear-all-btn" class="action-btn danger-btn">Clear All</button>
+          </div>
+        </div>
+        
+        <div class="history-table-container">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th width="150">Date & Time</th>
+                <th width="120">Target App</th>
+                <th>Transcribed Text</th>
+                <th width="100">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+          <div id="history-empty-state" class="empty-state" style="display: none;">
+            No logs matched your criteria.
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Settings Tab -->
+      <div id="tab-settings" class="tab-pane">
+        <h1 class="page-title">Settings</h1>
+        <form id="settings-form" class="settings-form">
+          <div class="settings-grid">
+            <!-- Left Column: Audio & VAD -->
+            <div class="settings-section">
+              <h2>Audio & VAD Thresholds</h2>
+              
+              <div class="form-group">
+                <label for="setting-silence">
+                  Silence Auto-Stop Threshold: <span id="val-silence">7.0</span>s
+                </label>
+                <input type="range" id="setting-silence" min="3.0" max="15.0" step="0.5" value="7.0">
+                <span class="hint">How long you can pause speaking before VAKH auto-finalizes and stops.</span>
+              </div>
+
+              <div class="form-group">
+                <label for="setting-vad">VAD Silence Filter Mode</label>
+                <select id="setting-vad">
+                  <option value="0">Quality (Standard voice detection)</option>
+                  <option value="1">Low Bitrate (Higher filtering sensitivity)</option>
+                  <option value="2">Aggressive (Filters loud background clicks)</option>
+                  <option value="3">Very Aggressive (Strict speech focus)</option>
+                </select>
+                <span class="hint">Changes VAD sensitivity to block fan hums, keyboard clicks, or echo.</span>
+              </div>
+
+              <div class="form-group">
+                <label for="setting-language">Dictation Language</label>
+                <select id="setting-language">
+                  <option value="en">English (Default)</option>
+                  <option value="de">German</option>
+                  <option value="fr">French</option>
+                  <option value="es">Spanish</option>
+                  <option value="hi">Hindi</option>
+                  <option value="it">Italian</option>
+                  <option value="ja">Japanese</option>
+                  <option value="zh">Chinese</option>
+                  <option value="auto">Auto-Detect</option>
+                </select>
+                <span class="hint">Whisper native language selection for higher transcription fidelity.</span>
+              </div>
+            </div>
+
+            <!-- Right Column: System & Pacing -->
+            <div class="settings-section">
+              <h2>Win32 Key Injection & Performance</h2>
+              
+              <div class="form-group">
+                <label for="setting-typing">
+                  Character Paced Speed: <span id="val-typing">8</span>ms
+                </label>
+                <input type="range" id="setting-typing" min="1" max="20" step="1" value="8">
+                <span class="hint">Interval between injected characters. Increase if letters get scrambled.</span>
+              </div>
+
+              <div class="form-group">
+                <label for="setting-backspace">
+                  Backspace Settling Delay: <span id="val-backspace">25</span>ms
+                </label>
+                <input type="range" id="setting-backspace" min="5" max="60" step="5" value="25">
+                <span class="hint">Pause duration after a bulk backspace loop to let target editors catch up.</span>
+              </div>
+
+              <div class="form-group">
+                <label for="setting-threads">Whisper AI CPU Threads</label>
+                <select id="setting-threads">
+                  <option value="1">1 Thread (Lower CPU usage)</option>
+                  <option value="2">2 Threads (Optimized balance)</option>
+                  <option value="4">4 Threads (Higher speed)</option>
+                  <option value="6">6 Threads (Power machines)</option>
+                  <option value="8">8 Threads (Maximum performance)</option>
+                </select>
+                <span class="hint">Threads allocated for transcription. Fewer threads prevent keyboard lag.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <span id="settings-status" class="status-msg"></span>
+            <button type="submit" class="action-btn save-btn">Save Configurations</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 4. Themes Tab -->
+      <div id="tab-themes" class="tab-pane">
+        <h1 class="page-title">Themes & UI</h1>
+        
+        <div class="themes-section">
+          <h2>Accent Glow Color Theme</h2>
+          <div class="themes-grid">
+            <button class="theme-card theme-btn-default" data-theme="default">
+              <span class="color-dot default"></span>
+              <span class="theme-name">Neon Blue</span>
+            </button>
+            <button class="theme-card theme-btn-sunset" data-theme="sunset">
+              <span class="color-dot sunset"></span>
+              <span class="theme-name">Sunset Orange</span>
+            </button>
+            <button class="theme-card theme-btn-neon" data-theme="neon">
+              <span class="color-dot neon"></span>
+              <span class="theme-name">Electric Cyan</span>
+            </button>
+            <button class="theme-card theme-btn-toxic" data-theme="toxic">
+              <span class="color-dot toxic"></span>
+              <span class="theme-name">Toxic Lime</span>
+            </button>
+            <button class="theme-card theme-btn-amber" data-theme="amber">
+              <span class="color-dot amber"></span>
+              <span class="theme-name">Royal Gold</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="themes-section">
+          <h2>Capsule UI Transparency</h2>
+          <div class="opacity-control-group">
+            <div class="form-group">
+              <label for="setting-opacity">
+                Floating Capsule Glass Opacity: <span id="val-opacity">0.85</span>
+              </label>
+              <input type="range" id="setting-opacity" min="0.30" max="1.00" step="0.05" value="0.85">
+              <span class="hint">Adjust the backdrop glass translucency of the main floating capsule.</span>
+            </div>
+            
+            <!-- Beautiful Capsule Preview Card -->
+            <div class="capsule-preview-card">
+              <h3>Capsule Preview</h3>
+              <div class="preview-backdrop">
+                <div id="capsule-preview" class="preview-capsule">
+                  <div class="prev-close"></div>
+                  <div class="prev-wave">
+                    <span class="prev-bar"></span>
+                    <span class="prev-bar active"></span>
+                    <span class="prev-bar"></span>
+                    <span class="prev-bar active"></span>
+                    <span class="prev-bar"></span>
+                  </div>
+                  <div class="prev-status">LISTENING</div>
+                  <div class="prev-toggle"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>

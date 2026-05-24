@@ -2,19 +2,22 @@ use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
     SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VK_BACK,
     VK_LCONTROL, VK_RCONTROL, VK_LSHIFT, VK_RSHIFT, VK_LMENU, VK_RMENU
 };
-use windows_sys::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
 use std::mem::size_of;
 
 pub struct TextInjector {
     current_draft: String,
     _target_hwnd: Option<isize>,
+    typing_delay: u64,
+    backspace_delay: u64,
 }
 
 impl TextInjector {
-    pub fn new(target_hwnd: Option<isize>) -> Self {
+    pub fn new(target_hwnd: Option<isize>, typing_delay: u64, backspace_delay: u64) -> Self {
         Self {
             current_draft: String::new(),
             _target_hwnd: target_hwnd,
+            typing_delay,
+            backspace_delay,
         }
     }
 
@@ -88,12 +91,12 @@ impl TextInjector {
                     SendInput(1, &input_down, size_of::<INPUT>() as i32);
                     std::thread::sleep(std::time::Duration::from_millis(5)); // let the down state register
                     SendInput(1, &input_up, size_of::<INPUT>() as i32);
-                    std::thread::sleep(std::time::Duration::from_millis(8)); // interval between backspaces
+                    std::thread::sleep(std::time::Duration::from_millis(self.typing_delay)); // interval between backspaces
                 }
 
-                // Crucial: sleep 25ms to let the OS and target app completely finish backspacing
+                // Crucial: sleep to let the OS and target app completely finish backspacing
                 // before we type the new characters. This avoids scrambled/backward text.
-                std::thread::sleep(std::time::Duration::from_millis(25));
+                std::thread::sleep(std::time::Duration::from_millis(self.backspace_delay));
             }
 
             // 3. Paced typing of the new part
@@ -123,7 +126,7 @@ impl TextInjector {
                     SendInput(1, &input_down, size_of::<INPUT>() as i32);
                     std::thread::sleep(std::time::Duration::from_millis(5)); // let the down state register
                     SendInput(1, &input_up, size_of::<INPUT>() as i32);
-                    std::thread::sleep(std::time::Duration::from_millis(8)); // interval between characters
+                    std::thread::sleep(std::time::Duration::from_millis(self.typing_delay)); // interval between characters
                 }
             }
         }

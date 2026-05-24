@@ -16,9 +16,9 @@ use tauri::{State, Manager, Emitter, AppHandle};
 use std::sync::mpsc::{channel, Sender};
 use whisper_rs::{WhisperContext, WhisperContextParameters, FullParams, SamplingStrategy};
 use injection::TextInjector;
-use db::Database;
+use db::{Database, LogEntry, AppStats};
 
-struct AppManagedState(Arc<Mutex<AppState>>, Arc<Database>, Arc<WhisperContext>, AppConfig);
+struct AppManagedState(Arc<Mutex<AppState>>, Arc<Database>, Arc<WhisperContext>, Arc<Mutex<AppConfig>>);
 
 enum ContextCommand {
     Finalize(Sender<String>),
@@ -29,12 +29,17 @@ pub fn perform_state_transition(
     state: Arc<Mutex<AppState>>,
     db: Arc<Database>,
     ctx: Arc<WhisperContext>,
-    config: AppConfig,
+    config_mutex: Arc<Mutex<AppConfig>>,
 ) {
     if let Some(window) = app_handle.get_webview_window("main") {
         let _ = window.show();
     }
     let _ = app_handle.emit("vakh-show", ());
+
+    let config = {
+        let lock = config_mutex.lock().unwrap_or_else(|e| e.into_inner());
+        lock.clone()
+    };
 
     let (_next_state, start_audio) = {
         let mut app_state = state.lock().unwrap_or_else(|e| e.into_inner());
@@ -55,7 +60,13 @@ pub fn perform_state_transition(
         let (tx2, rx2) = channel::<Vec<f32>>(); // Raw Stream (for AI Worker)
         let (status_tx, status_rx) = channel::<AudioStatus>();
 
-        match audio::AudioProcessor::start_listening(tx1, tx2, status_tx) {
+        match audio::AudioProcessor::start_listening(
+            tx1,
+            tx2,
+            status_tx,
+            config.vad_sensitivity,
+            config.silence_timeout,
+        ) {
             Ok(stream) => {
                 {
                     let mut app_state = state.lock().unwrap_or_else(|e| e.into_inner());
@@ -85,7 +96,11 @@ pub fn perform_state_transition(
                 };
 
                 std::thread::spawn(move || {
-                    let injector = Arc::new(Mutex::new(TextInjector::new(Some(target_hwnd))));
+                    let injector = Arc::new(Mutex::new(TextInjector::new(
+                        Some(target_hwnd),
+                        config_for_thread.typing_delay,
+                        config_for_thread.backspace_delay,
+                    )));
 
                     // --- WORKER THREAD: Context Thread (High Accuracy Accumulator) ---
                     let (ctx_tx, ctx_rx) = channel::<ContextCommand>();
@@ -107,11 +122,13 @@ pub fn perform_state_transition(
                         // Independent Audio Collection from RX2
                         let worker_audio_rx = rx2;
                         
+                        let lang_str = ctx_config.language.clone();
+                        
                         let final_params = {
                             let mut p = FullParams::new(SamplingStrategy::BeamSearch {
                                 beam_size: 5, patience: 2.0,
                             });
-                            p.set_language(Some("en"));
+                            p.set_language(Some(&lang_str));
                             p.set_n_threads(ctx_config.threads);
                             p.set_print_special(false);
                             p.set_print_progress(false);
@@ -300,6 +317,13 @@ fn hide_window(handle: AppHandle) {
 }
 
 #[tauri::command]
+fn start_dragging(handle: AppHandle) {
+    if let Some(window) = handle.get_webview_window("main") {
+        let _ = window.start_dragging();
+    }
+}
+
+#[tauri::command]
 fn toggle_listening(
     handle: AppHandle,
     state: State<AppManagedState>,
@@ -311,6 +335,72 @@ fn toggle_listening(
     perform_state_transition(handle, state_handle.clone(), db_handle, ctx_handle, config);
     let app_state = state_handle.lock().unwrap_or_else(|e| e.into_inner());
     Ok(app_state.current_state)
+}
+
+#[tauri::command]
+fn get_config(state: State<AppManagedState>) -> AppConfig {
+    let lock = state.inner().3.lock().unwrap_or_else(|e| e.into_inner());
+    lock.clone()
+}
+
+#[tauri::command]
+fn save_config(handle: AppHandle, state: State<AppManagedState>, config: AppConfig) -> Result<(), String> {
+    // Save to disk
+    let mut path = std::env::var("LOCALAPPDATA")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| {
+            std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."))
+        });
+    path.push("VAKH");
+    let _ = std::fs::create_dir_all(&path);
+    path.push("config.json");
+    
+    if let Ok(json) = serde_json::to_string_pretty(&config) {
+        if let Err(e) = std::fs::write(path, json) {
+            return Err(format!("Failed to write config: {}", e));
+        }
+    } else {
+        return Err("Failed to serialize config".to_string());
+    }
+
+    // Update state
+    {
+        let mut lock = state.inner().3.lock().unwrap_or_else(|e| e.into_inner());
+        *lock = config.clone();
+    }
+
+    // Emit configuration change event to let frontend windows react immediately
+    let _ = handle.emit("vakh-config-changed", config);
+
+    Ok(())
+}
+
+#[tauri::command]
+fn get_dictation_logs(state: State<AppManagedState>) -> Result<Vec<LogEntry>, String> {
+    state.inner().1.get_dictation_logs().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn delete_log(state: State<AppManagedState>, id: i64) -> Result<(), String> {
+    state.inner().1.delete_log(id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn clear_logs(state: State<AppManagedState>) -> Result<(), String> {
+    state.inner().1.clear_logs().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_stats(state: State<AppManagedState>) -> Result<AppStats, String> {
+    state.inner().1.get_stats().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn open_dashboard(handle: AppHandle) {
+    if let Some(window) = handle.get_webview_window("dashboard") {
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -330,13 +420,16 @@ pub fn run() {
     );
     println!("[Whisper] Model loaded successfully");
 
+    let shared_config = Arc::new(Mutex::new(config));
+
+    let state_for_hooks  = Arc::clone(&app_state);
+    let db_for_hooks     = Arc::clone(&database);
+    let ctx_for_hooks    = Arc::clone(&ctx);
+    let config_for_hooks = Arc::clone(&shared_config);
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(move |app| {
-            let state_for_hooks  = Arc::clone(&app_state);
-            let db_for_hooks     = Arc::clone(&database);
-            let ctx_for_hooks    = Arc::clone(&ctx);
-            let config_for_hooks = config.clone();
             let handle_for_hooks = app.handle().clone();
             hooks::start_hotkey_listener(
                 handle_for_hooks,
@@ -375,11 +468,22 @@ pub fn run() {
                 Arc::clone(&app_state),
                 Arc::clone(&database),
                 Arc::clone(&ctx),
-                config.clone(),
+                Arc::clone(&shared_config),
             ));
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![toggle_listening, hide_window])
+        .invoke_handler(tauri::generate_handler![
+            toggle_listening,
+            hide_window,
+            get_config,
+            save_config,
+            get_dictation_logs,
+            delete_log,
+            clear_logs,
+            get_stats,
+            open_dashboard,
+            start_dragging
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
