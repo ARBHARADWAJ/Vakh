@@ -1,7 +1,4 @@
 const { invoke } = window.__TAURI__.core;
-const { getCurrentWindow } = window.__TAURI__.window;
-
-const dashboardWindow = getCurrentWindow();
 
 // Global State
 let currentConfig = null;
@@ -15,6 +12,14 @@ window.addEventListener("DOMContentLoaded", () => {
   initSettingsTab();
   initThemesTab();
   
+  // Listen for config changes from backend (e.g. from main capsule or dashboard saving)
+  window.__TAURI__.event.listen("vakh-config-changed", (event) => {
+    if (event.payload) {
+      currentConfig = event.payload;
+      syncConfigToUI(currentConfig);
+    }
+  });
+
   // Initial load
   loadConfigAndSync();
 });
@@ -24,11 +29,11 @@ window.addEventListener("DOMContentLoaded", () => {
 // ------------------------------------------------------------
 function initWindowControls() {
   document.querySelector("#close-btn").addEventListener("click", () => {
-    dashboardWindow.hide();
+    invoke("hide_dashboard");
   });
 
   document.querySelector("#min-btn").addEventListener("click", () => {
-    dashboardWindow.minimize();
+    invoke("minimize_dashboard");
   });
 }
 
@@ -284,6 +289,7 @@ function initSettingsTab() {
 // ------------------------------------------------------------
 function initThemesTab() {
   const opacitySlider = document.querySelector("#setting-opacity");
+  const dashboardOpacitySlider = document.querySelector("#setting-dashboard-opacity");
   const themeCards = document.querySelectorAll(".theme-card");
 
   opacitySlider.addEventListener("input", (e) => {
@@ -297,8 +303,24 @@ function initThemesTab() {
     }
 
     // Save configuration change immediately
-    saveThemeOrOpacity(val, null);
+    saveThemeOrOpacity(val, null, null);
   });
+
+  if (dashboardOpacitySlider) {
+    dashboardOpacitySlider.addEventListener("input", (e) => {
+      const val = parseFloat(e.target.value);
+      document.querySelector("#val-dashboard-opacity").innerText = val.toFixed(2);
+      
+      // Live update dashboard container background
+      const dashboardApp = document.querySelector("#dashboard-app");
+      if (dashboardApp) {
+        dashboardApp.style.background = `rgba(10, 10, 14, ${val})`;
+      }
+
+      // Save configuration change immediately
+      saveThemeOrOpacity(null, null, val);
+    });
+  }
 
   themeCards.forEach(card => {
     card.addEventListener("click", () => {
@@ -311,18 +333,19 @@ function initThemesTab() {
       document.body.className = `theme-${selectedTheme}`;
       
       // Save configuration change immediately
-      saveThemeOrOpacity(null, selectedTheme);
+      saveThemeOrOpacity(null, selectedTheme, null);
     });
   });
 }
 
-async function saveThemeOrOpacity(opacity, theme) {
+async function saveThemeOrOpacity(opacity, theme, dashboardOpacity) {
   if (!currentConfig) return;
   
   const updatedConfig = {
     ...currentConfig,
     capsule_opacity: opacity !== null ? opacity : currentConfig.capsule_opacity,
-    theme: theme !== null ? theme : currentConfig.theme
+    theme: theme !== null ? theme : currentConfig.theme,
+    dashboard_opacity: dashboardOpacity !== null && dashboardOpacity !== undefined ? dashboardOpacity : currentConfig.dashboard_opacity
   };
 
   try {
@@ -375,6 +398,17 @@ function syncConfigToUI(config) {
   const preview = document.querySelector("#capsule-preview");
   if (preview) {
     preview.style.background = `rgba(10, 10, 12, ${config.capsule_opacity})`;
+  }
+
+  // Dashboard Opacity Sync
+  const dashboardOpacitySlider = document.querySelector("#setting-dashboard-opacity");
+  if (dashboardOpacitySlider && config.dashboard_opacity !== undefined) {
+    dashboardOpacitySlider.value = config.dashboard_opacity;
+    document.querySelector("#val-dashboard-opacity").innerText = parseFloat(config.dashboard_opacity).toFixed(2);
+  }
+  const dashboardApp = document.querySelector("#dashboard-app");
+  if (dashboardApp && config.dashboard_opacity !== undefined) {
+    dashboardApp.style.background = `rgba(10, 10, 14, ${config.dashboard_opacity})`;
   }
 
   // 4. Accent Glow active indicator

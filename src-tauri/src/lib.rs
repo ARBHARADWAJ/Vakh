@@ -17,6 +17,7 @@ use std::sync::mpsc::{channel, Sender};
 use whisper_rs::{WhisperContext, WhisperContextParameters, FullParams, SamplingStrategy};
 use injection::TextInjector;
 use db::{Database, LogEntry, AppStats};
+use cpal::traits::StreamTrait;
 
 struct AppManagedState(Arc<Mutex<AppState>>, Arc<Database>, Arc<WhisperContext>, Arc<Mutex<AppConfig>>);
 
@@ -230,7 +231,10 @@ pub fn perform_state_transition(
                         if auto_halt {
                             {
                                 let mut s = state_for_thread.lock().unwrap_or_else(|e| e.into_inner());
-                                if let Some(SendWrapper(stream)) = s.audio_stream.take() { drop(stream); }
+                                if let Some(SendWrapper(stream)) = s.audio_stream.take() {
+                                    let _ = stream.pause(); // ensure mic hardware stops
+                                    drop(stream);
+                                }
                             }
                             run_finalize(&injector, &ctx_tx, &handle_for_thread, &db_for_thread, &target_app_name);
                             break;
@@ -268,6 +272,7 @@ pub fn perform_state_transition(
     } else {
         let mut app_state = state.lock().unwrap_or_else(|e| e.into_inner());
         if let Some(SendWrapper(stream)) = app_state.audio_stream.take() {
+            let _ = stream.pause(); // ensure mic hardware stops
             drop(stream);
         }
         app_state.transition_to(VakhState::Idle);
@@ -399,7 +404,22 @@ fn get_stats(state: State<AppManagedState>) -> Result<AppStats, String> {
 fn open_dashboard(handle: AppHandle) {
     if let Some(window) = handle.get_webview_window("dashboard") {
         let _ = window.show();
+        let _ = window.unminimize();
         let _ = window.set_focus();
+    }
+}
+
+#[tauri::command]
+fn hide_dashboard(handle: AppHandle) {
+    if let Some(window) = handle.get_webview_window("dashboard") {
+        let _ = window.hide();
+    }
+}
+
+#[tauri::command]
+fn minimize_dashboard(handle: AppHandle) {
+    if let Some(window) = handle.get_webview_window("dashboard") {
+        let _ = window.minimize();
     }
 }
 
@@ -429,6 +449,14 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                if window.label() == "dashboard" {
+                    let _ = window.hide();
+                    api.prevent_close();
+                }
+            }
+        })
         .setup(move |app| {
             let handle_for_hooks = app.handle().clone();
             hooks::start_hotkey_listener(
@@ -482,6 +510,8 @@ pub fn run() {
             clear_logs,
             get_stats,
             open_dashboard,
+            hide_dashboard,
+            minimize_dashboard,
             start_dragging
         ])
         .run(tauri::generate_context!())

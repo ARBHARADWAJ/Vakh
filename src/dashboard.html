@@ -242,12 +242,22 @@
         <div class="themes-section">
           <h2>Capsule UI Transparency</h2>
           <div class="opacity-control-group">
-            <div class="form-group">
-              <label for="setting-opacity">
-                Floating Capsule Glass Opacity: <span id="val-opacity">0.85</span>
-              </label>
-              <input type="range" id="setting-opacity" min="0.30" max="1.00" step="0.05" value="0.85">
-              <span class="hint">Adjust the backdrop glass translucency of the main floating capsule.</span>
+            <div class="opacity-sliders">
+              <div class="form-group">
+                <label for="setting-opacity">
+                  Floating Capsule Glass Opacity: <span id="val-opacity">0.85</span>
+                </label>
+                <input type="range" id="setting-opacity" min="0.30" max="1.00" step="0.05" value="0.85">
+                <span class="hint">Adjust the backdrop glass translucency of the main floating capsule.</span>
+              </div>
+              
+              <div class="form-group" style="margin-top: 20px;">
+                <label for="setting-dashboard-opacity">
+                  Settings Dashboard Glass Opacity: <span id="val-dashboard-opacity">0.75</span>
+                </label>
+                <input type="range" id="setting-dashboard-opacity" min="0.30" max="1.00" step="0.05" value="0.75">
+                <span class="hint">Adjust the backdrop glass translucency of this settings dashboard window.</span>
+              </div>
             </div>
             
             <!-- Beautiful Capsule Preview Card -->

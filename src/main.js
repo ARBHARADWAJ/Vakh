@@ -17,12 +17,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // Get all waveform bars
   waveformBars = document.querySelectorAll(".waveform .bar");
 
-  // Handle dragging the window from anywhere on the capsule except buttons
-  appEl.addEventListener("mousedown", (e) => {
-    if (e.target.tagName !== "BUTTON" && !e.target.closest("button") && !e.target.closest(".icon-btn")) {
-      invoke("start_dragging");
-    }
-  });
+  // Dragging is handled natively by data-tauri-drag-region on #app in index.html
 
   toggleBtn.addEventListener("click", () => toggleListening());
 
@@ -77,6 +72,13 @@ window.addEventListener("DOMContentLoaded", () => {
     appEl.style.opacity = "";
   });
 
+  // Sync UI IMMEDIATELY when hotkey fires (before audio thread starts)
+  window.__TAURI__.event.listen("vakh-start-listening", () => {
+    setStateClass("is-listening");
+    statusTextEl.innerText = "LISTENING";
+    setToggleActive(true);
+  });
+
   // Listen for hide event
   window.__TAURI__.event.listen("vakh-hide", () => {
     hideWindow();
@@ -96,6 +98,7 @@ window.addEventListener("DOMContentLoaded", () => {
       appEl.classList.add("is-warning");
       appEl.classList.remove("is-speaking");
       statusTextEl.innerText = `SILENCE (${data.duration}s)...`;
+      setToggleActive(true);   // still active — show stop icon
     } else if (data.status === "active") {
       appEl.classList.remove("is-warning");
       appEl.classList.remove("is-finalizing");
@@ -103,6 +106,7 @@ window.addEventListener("DOMContentLoaded", () => {
       appEl.classList.remove("is-listening");
       appEl.classList.add("is-speaking");
       statusTextEl.innerText = "SPEAKING";
+      setToggleActive(true);
     } else if (data.status === "listening") {
       appEl.classList.remove("is-warning");
       appEl.classList.remove("is-finalizing");
@@ -110,20 +114,24 @@ window.addEventListener("DOMContentLoaded", () => {
       appEl.classList.remove("is-speaking");
       appEl.classList.add("is-listening");
       statusTextEl.innerText = "LISTENING";
+      setToggleActive(true);
     } else if (data.status === "finalizing") {
       appEl.classList.remove("is-warning");
       appEl.classList.remove("is-listening");
       appEl.classList.remove("is-speaking");
       appEl.classList.add("is-finalizing");
       statusTextEl.innerText = "FINALIZING...";
+      setToggleActive(true);   // still processing — keep stop icon
     } else if (data.status === "processing") {
       appEl.classList.remove("is-warning");
       appEl.classList.remove("is-listening");
       appEl.classList.remove("is-speaking");
       appEl.classList.add("is-processing");
       statusTextEl.innerText = "PROCESSING...";
+      setToggleActive(true);
     } else if (data.status === "idle") {
       updateUI("Idle");
+      setToggleActive(false);  // fully idle — show play icon
       // Reset bars to default
       waveformBars.forEach(bar => {
         bar.style.height = "6px";
@@ -175,14 +183,30 @@ async function toggleListening() {
 
 function updateUI(state) {
   if (state === "Listening" || state === "Processing") {
-    appEl.className = "is-listening";
+    setStateClass("is-listening");
     statusTextEl.innerText = "LISTENING";
+    setToggleActive(true);
+  } else {
+    setStateClass("is-paused");
+    statusTextEl.innerText = "PAUSED";
+    setToggleActive(false);
+  }
+}
+
+// Swap state class without wiping theme classes
+const STATE_CLASSES = ["is-listening","is-speaking","is-paused","is-warning","is-finalizing","is-processing"];
+function setStateClass(cls) {
+  STATE_CLASSES.forEach(c => appEl.classList.remove(c));
+  appEl.classList.add(cls);
+}
+
+// Centralized helper to set the toggle button state
+function setToggleActive(isActive) {
+  if (isActive) {
     playIcon.style.display = "none";
     stopIcon.style.display = "block";
     stopIcon.style.color = "#ff453a";
   } else {
-    appEl.className = "is-paused";
-    statusTextEl.innerText = "PAUSED";
     playIcon.style.display = "block";
     playIcon.style.color = "#32d74b";
     stopIcon.style.display = "none";
