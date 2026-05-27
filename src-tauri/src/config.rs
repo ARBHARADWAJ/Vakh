@@ -12,6 +12,7 @@ pub struct AppConfig {
     pub backspace_delay: u64,
     pub vad_sensitivity: i32,
     pub capsule_opacity: f32,
+    pub dashboard_opacity: f32,
     pub theme: String,
 }
 
@@ -25,6 +26,7 @@ impl Default for AppConfig {
             backspace_delay: 25,
             vad_sensitivity: 0, // Quality mode
             capsule_opacity: 0.85,
+            dashboard_opacity: 0.75,
             theme: "default".to_string(),
         }
     }

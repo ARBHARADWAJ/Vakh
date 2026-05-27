@@ -165,6 +165,16 @@ impl AudioProcessor {
                         is_voice
                     };
 
+                    // === SOFT ENERGY NOISE GATE ===
+                    // Override VAD if the raw audio energy is below the room-noise threshold.
+                    // This prevents quiet fan hums or ambient noise from activating the speech path.
+                    const NOISE_GATE_RMS: f32 = 0.008;
+                    let frame_rms = (resampled_segment.iter()
+                        .map(|x| x * x)
+                        .sum::<f32>() / resampled_segment.len() as f32)
+                        .sqrt();
+                    let is_voice = if frame_rms < NOISE_GATE_RMS { false } else { is_voice };
+
                     let mut has_speech = is_voice;
 
                     if is_voice {
