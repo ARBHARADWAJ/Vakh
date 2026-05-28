@@ -1,0 +1,1439 @@
+/* ==========================================================================
+   VAKH Landing Page Stylesheet - Vintage-Futuristic Workstation Console Edition
+   Theme: Manual Hardware Switch Toggle (Parchment Light / Midnight Indigo Dark)
+   Design Philosophy: Comfort, vintage console chassis feel, WebGL fluid meshes.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;700&display=swap');
+
+:root {
+  /* ==========================================================================
+     DEFAULT: Pristine Solarized Light Phosphor Palette
+     ========================================================================== */
+  --bg-deep: #e2e5eb; /* Soft ambient shadow background */
+  --bg-chassis: #e9e7e0; /* Tactile hardware ivory/beige workstation finish */
+  --bg-screen: #fcfbf7; /* Soothing warm vintage parchment screen */
+  --bg-module: rgba(255, 255, 255, 0.45); /* Translucent digital paper layer */
+  --bg-input-card: #ffffff; /* Crisp white for inputs and cards */
+  --border-hardware: #78716c; /* Rich ironstone metal bezel border */
+  --border-screen: rgba(15, 23, 42, 0.08); /* Very soft panel boundaries */
+  
+  /* High-Contrast Aesthetic Text Colors */
+  --text-active: #0f172a; /* Solid ink charcoal black */
+  --text-normal: #334155; /* Readable slate gray */
+  --text-muted: #64748b; /* Soft metal slate */
+  
+  /* Cyber Light-Theme Accents (Vibrant & Comfortable) */
+  --accent-blue: #1d4ed8; /* Deep cobalt systems blue */
+  --accent-teal: #0f766e; /* Phosphor emerald green */
+  --accent-orange: #b45309; /* Warm vintage warning amber */
+  --accent-cyan: #0369a1; /* Cyber cyan */
+
+  /* Typography */
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'Fira Code', 'Courier New', Courier, monospace;
+}
+
+/* Global Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  font-family: var(--font-sans);
+  font-size: 15px; /* Increased slightly for a much more comfortable, clear reading experience */
+  line-height: 1.75; /* Perfectly loose line height for peak readability */
+  background-color: transparent; /* Set to transparent so the animated fluid mesh gradient is fully visible and never cut off! */
+  color: var(--text-normal);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Hide Theme Toggle Checkbox Natively */
+.theme-toggle-checkbox {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   60FPS Pure CSS Fluid Mesh Gradient Background (WebGL Simulation)
+   -------------------------------------------------------------------------- */
+.fluid-mesh-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -2;
+  overflow: hidden;
+  background-color: #e5e9f0;
+  filter: blur(100px);
+  mix-blend-mode: multiply;
+  opacity: 0.85;
+  transition: background-color 0.3s ease;
+}
+
+.fluid-blob {
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: multiply;
+  opacity: 0.35;
+  transition: all 0.5s ease;
+}
+
+.blob-blue {
+  width: 650px;
+  height: 650px;
+  background-color: #93c5fd; /* Soft electric blue */
+  top: -10%;
+  left: -5%;
+  animation: fluidOrbit1 50s infinite alternate ease-in-out;
+}
+
+.blob-coral {
+  width: 750px;
+  height: 750px;
+  background-color: #fca5a5; /* Bright neon coral */
+  bottom: -15%;
+  right: -5%;
+  animation: fluidOrbit2 65s infinite alternate ease-in-out;
+}
+
+.blob-amber {
+  width: 550px;
+  height: 550px;
+  background-color: #fde047; /* Cyber amber aura */
+  top: 30%;
+  left: 45%;
+  animation: fluidOrbit3 58s infinite alternate ease-in-out;
+}
+
+.blob-mint {
+  width: 600px;
+  height: 600px;
+  background-color: #86efac; /* Minty fluid glow */
+  bottom: 25%;
+  left: -10%;
+  animation: fluidOrbit1 45s infinite alternate-reverse ease-in-out;
+}
+
+@keyframes fluidOrbit1 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(120px, 90px) scale(1.1) rotate(180deg); }
+  100% { transform: translate(-50px, -40px) scale(0.9) rotate(360deg); }
+}
+
+@keyframes fluidOrbit2 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(-140px, -110px) scale(0.95) rotate(-120deg); }
+  100% { transform: translate(60px, 80px) scale(1.05) rotate(-240deg); }
+}
+
+@keyframes fluidOrbit3 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(-90px, 120px) scale(1.15) rotate(150deg); }
+  100% { transform: translate(80px, -60px) scale(0.85) rotate(300deg); }
+}
+
+/* --------------------------------------------------------------------------
+   DARK MODE OVERRIDES (MANUAL CHECKBOX CHECKS SIBLING INJECTIONS)
+   -------------------------------------------------------------------------- */
+.theme-toggle-checkbox:checked ~ .fluid-mesh-bg {
+  background-color: #060911;
+}
+
+.theme-toggle-checkbox:checked ~ .fluid-mesh-bg .blob-blue { background-color: #1e3a8a; }
+.theme-toggle-checkbox:checked ~ .fluid-mesh-bg .blob-coral { background-color: #2e1847; }
+.theme-toggle-checkbox:checked ~ .fluid-mesh-bg .blob-amber { background-color: #111e38; }
+.theme-toggle-checkbox:checked ~ .fluid-mesh-bg .blob-mint { background-color: #0f292b; }
+
+.theme-toggle-checkbox:checked ~ .fluid-mesh-bg .fluid-blob {
+  mix-blend-mode: screen;
+  opacity: 0.18; /* Strictly calibrated to eliminate eye fatigue */
+}
+
+/* Apply Dark Variables to Workstation Screen on Toggle */
+.theme-toggle-checkbox:checked ~ .terminal-chassis {
+  --bg-deep: #090c14;
+  --bg-chassis: #171c26; /* Deep matte carbon bezel casing */
+  --bg-screen: #0a0e18; /* Translucent midnight indigo CRT monitor screen */
+  --bg-module: rgba(15, 22, 38, 0.4);
+  --bg-input-card: rgba(255, 255, 255, 0.02);
+  --border-hardware: #475569;
+  --border-screen: rgba(255, 255, 255, 0.06);
+  
+  --text-active: #f1f5f9;
+  --text-normal: #cbd5e1;
+  --text-muted: #64748b;
+  
+  --accent-blue: #60a5fa;
+  --accent-teal: #2dd4bf;
+  --accent-orange: #fb923c;
+  --accent-cyan: #38bdf8;
+}
+
+/* --------------------------------------------------------------------------
+   Tactile Hardware Workstation Bezel Chassis
+   -------------------------------------------------------------------------- */
+.terminal-chassis {
+  max-width: 1100px;
+  width: 95%;
+  margin: 3.5rem auto;
+  background-color: var(--bg-chassis);
+  border: 4px double var(--border-hardware);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 
+    0 30px 70px -15px rgba(15, 23, 42, 0.25),
+    inset 0 2px 4px rgba(255, 255, 255, 0.8),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis {
+  box-shadow: 
+    0 40px 80px -20px rgba(0, 0, 0, 0.6),
+    inset 0 1px 2px rgba(255, 255, 255, 0.05),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Bezel Status Bar Header */
+.chassis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--border-hardware);
+  font-weight: 700;
+  padding: 0 0.5rem;
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+.hardware-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bezel-screw {
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.2);
+  transition: color 0.3s ease;
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .bezel-screw {
+  color: rgba(255, 255, 255, 0.15);
+}
+
+/* Tactile Bezel Theme Switcher Slider */
+.theme-switch-container {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--border-hardware);
+}
+
+.toggle-label-text {
+  font-weight: 700;
+}
+
+.hardware-switch {
+  position: relative;
+  width: 36px;
+  height: 18px;
+  background-color: #cbd5e1;
+  border-radius: 9px;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  transition: background-color 0.2s ease;
+}
+
+.switch-knob {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 14px;
+  height: 14px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover switch effects */
+.hardware-switch:hover {
+  filter: brightness(0.95);
+}
+
+/* Checkbox Toggle checked transitions on bezel switch */
+.theme-toggle-checkbox:checked ~ .terminal-chassis .hardware-switch {
+  background-color: var(--accent-blue);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .switch-knob {
+  transform: translateX(18px);
+}
+
+/* Active Theme text indicators */
+.theme-indicator {
+  opacity: 0.35;
+  font-weight: 700;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.light-indicator {
+  color: var(--accent-teal);
+  opacity: 1;
+}
+
+.dark-indicator {
+  color: var(--accent-orange);
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .light-indicator {
+  opacity: 0.35;
+  color: var(--text-muted);
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .dark-indicator {
+  opacity: 1;
+  color: var(--accent-orange);
+}
+
+/* Bezel LED indicators */
+.hardware-leds {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.led {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+}
+
+.led::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  background-color: #a8a29e;
+  border: 1px solid rgba(0,0,0,0.15);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+.led.power-led.active::before {
+  background-color: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.8), inset 0 1px 1px white;
+}
+
+.led.rx-led.flashing::before {
+  background-color: #06b6d4;
+  animation: ledPulse 0.8s infinite alternate;
+}
+
+.led.disk-led.idle::before {
+  background-color: #eab308;
+  opacity: 0.7;
+}
+
+@keyframes ledPulse {
+  0% { background-color: #0891b2; box-shadow: none; }
+  100% { background-color: #22d3ee; box-shadow: 0 0 8px rgba(34, 211, 238, 0.8); }
+}
+
+/* --------------------------------------------------------------------------
+   Vintage CRT Curved Screen Frame
+   -------------------------------------------------------------------------- */
+.crt-screen {
+  position: relative;
+  background-color: var(--bg-screen);
+  border: 3px solid #1e293b;
+  border-radius: 8px;
+  box-shadow: 
+    inset 0 15px 30px rgba(0,0,0,0.06),
+    inset 0 -15px 30px rgba(0,0,0,0.02),
+    0 10px 25px -5px rgba(0,0,0,0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease;
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .crt-screen {
+  border-color: #020617;
+  box-shadow: 
+    inset 0 20px 40px rgba(0,0,0,0.45),
+    0 10px 25px -5px rgba(0,0,0,0.3);
+}
+
+/* CRT Linear Scanline Effect Overlay */
+.screen-scanlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+  background: 
+    linear-gradient(rgba(15, 23, 42, 0) 50%, rgba(15, 23, 42, 0.02) 50%),
+    radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.02) 100%);
+  background-size: 100% 4px, 100% 100%;
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .screen-scanlines {
+  background: 
+    linear-gradient(rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.12) 50%),
+    radial-gradient(circle, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.2) 100%);
+  background-size: 100% 4px, 100% 100%;
+  opacity: 0.45;
+}
+
+/* Screen Title Header Bar */
+.screen-chrome {
+  background-color: rgba(15, 23, 42, 0.03);
+  border-bottom: 1px solid var(--border-screen);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  z-index: 2;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .screen-chrome {
+  background-color: rgba(0, 0, 0, 0.18);
+}
+
+.system-nav {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  padding: 0.35rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.nav-btn:hover {
+  color: var(--accent-blue);
+  background-color: rgba(29, 78, 216, 0.06);
+  border-color: rgba(29, 78, 216, 0.12);
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .nav-btn:hover {
+  color: var(--accent-blue);
+  background-color: rgba(96, 165, 250, 0.06);
+  border-color: rgba(96, 165, 250, 0.12);
+}
+
+.system-ip {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   CRT Viewport Scrolling Chassis Inner Content
+   -------------------------------------------------------------------------- */
+.crt-viewport {
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+  background-image: 
+    radial-gradient(rgba(29, 78, 216, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .crt-viewport {
+  background-image: 
+    radial-gradient(rgba(96, 165, 250, 0.03) 1px, transparent 1px);
+}
+
+/* Module Framing */
+.console-module {
+  border-bottom: 1px solid var(--border-screen);
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.2s ease;
+}
+
+.console-module:last-of-type {
+  border-bottom: none;
+}
+
+.console-module-header {
+  background-color: rgba(15, 23, 42, 0.015);
+  border-bottom: 1px dashed var(--border-screen);
+  padding: 0.8rem 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.prompt-arrow {
+  color: var(--accent-orange);
+  font-weight: 700;
+}
+
+.prompt-arrow::after {
+  content: '█';
+  margin-left: 0.25rem;
+  color: var(--accent-orange);
+  animation: cursorBlink 1.2s steps(2, start) infinite;
+}
+
+@keyframes cursorBlink {
+  to { visibility: hidden; }
+}
+
+.module-number {
+  color: var(--accent-teal);
+  font-weight: 700;
+}
+
+.console-module-body {
+  padding: 3rem 2.5rem;
+}
+
+/* Retro-Futuristic Typography */
+.terminal-headline {
+  font-size: 2.6rem; /* Scaled up and adjusted for maximum impact */
+  line-height: 1.25;
+  color: var(--text-active);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.035em; /* Highly aesthetic tighter letter spacing */
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.terminal-prose {
+  font-size: 1.15rem; /* Scaled up for comfort reading */
+  color: var(--text-normal);
+  margin-bottom: 2.25rem;
+  max-width: 850px;
+  line-height: 1.75;
+}
+
+.terminal-prose.muted {
+  color: var(--text-muted);
+}
+
+/* Highlighting systems */
+.highlight-word {
+  background-color: rgba(3, 105, 161, 0.06);
+  border: 1px solid rgba(3, 105, 161, 0.25);
+  color: var(--accent-cyan);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: bold;
+  font-family: var(--font-mono);
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .highlight-word {
+  background-color: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.25);
+  color: var(--accent-cyan);
+}
+
+.hotkey-caps {
+  background-color: #1e293b;
+  color: #f8fafc;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.75rem;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  box-shadow: 0 2px 0 #0f172a;
+}
+
+/* --------------------------------------------------------------------------
+   Retro Telemetry Specs Matrix
+   -------------------------------------------------------------------------- */
+.telemetry-specs-matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  background-color: var(--border-screen);
+  border: 1px solid var(--border-screen);
+  border-radius: 6px;
+  margin-bottom: 2.5rem;
+  overflow: hidden;
+  font-family: var(--font-mono);
+}
+
+.spec-matrix-cell {
+  background-color: rgba(255, 255, 255, 0.85);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border: 1px solid rgba(29, 78, 216, 0.05);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .spec-matrix-cell {
+  background-color: rgba(10, 15, 28, 0.45);
+  border-color: rgba(96, 165, 250, 0.06);
+}
+
+.matrix-lbl {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.matrix-val {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-active);
+}
+
+.font-teal { color: var(--accent-teal); }
+.font-blue { color: var(--accent-blue); }
+.font-orange { color: var(--accent-orange); }
+
+/* Download Chassis section */
+.download-chassis {
+  border-top: 1px dashed var(--border-screen);
+  padding-top: 2rem;
+}
+
+.chassis-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+}
+
+.binary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.binary-card {
+  border: 1px solid rgba(29, 78, 216, 0.15);
+  background: linear-gradient(135deg, rgba(29, 78, 216, 0.04) 0%, rgba(29, 78, 216, 0.005) 100%);
+  border-radius: 6px;
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  text-decoration: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .binary-card {
+  border-color: rgba(96, 165, 250, 0.18);
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.03) 0%, rgba(96, 165, 250, 0.005) 100%);
+}
+
+.binary-card:hover:not(.in-development) {
+  border-color: var(--accent-blue);
+  background: linear-gradient(135deg, rgba(29, 78, 216, 0.08) 0%, rgba(29, 78, 216, 0.01) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(29, 78, 216, 0.06);
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .binary-card:hover:not(.in-development) {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.06) 0%, rgba(96, 165, 250, 0.01) 100%);
+  box-shadow: 0 10px 25px rgba(96, 165, 250, 0.04);
+}
+
+.card-icon {
+  font-size: 1.75rem;
+}
+
+.card-desc {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.card-title {
+  color: var(--text-active);
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-sub {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-top: 0.2rem;
+  line-height: 1.4;
+}
+
+.card-action-btn {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background-color: var(--text-active);
+  color: var(--bg-screen);
+  opacity: 0.8;
+  transition: opacity 0.15s ease;
+}
+
+.binary-card:hover .card-action-btn:not(.disabled) {
+  opacity: 1;
+}
+
+/* Portable core is in development style */
+.binary-card.in-development {
+  border: 1px dashed rgba(180, 83, 9, 0.3);
+  background: linear-gradient(135deg, rgba(180, 83, 9, 0.03) 0%, rgba(180, 83, 9, 0.005) 100%);
+  cursor: default;
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .binary-card.in-development {
+  border-color: rgba(251, 146, 60, 0.2);
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.02) 0%, rgba(251, 146, 60, 0.005) 100%);
+}
+
+.dev-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--accent-orange);
+  background-color: rgba(180, 83, 9, 0.08);
+  border: 1px solid rgba(180, 83, 9, 0.25);
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+}
+
+.card-action-btn.disabled {
+  background-color: transparent;
+  color: var(--accent-orange);
+  border: 1px dashed rgba(180, 83, 9, 0.4);
+  font-size: 0.65rem;
+  opacity: 0.75;
+}
+
+/* Schematics core grids */
+.tech-schematics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.25rem;
+}
+
+.schematic-item {
+  border-left: 2px solid var(--border-screen);
+  padding-left: 1.25rem;
+  border-color: var(--accent-teal);
+}
+
+.schematic-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-active);
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.schematic-desc {
+  font-size: 0.85rem;
+  color: var(--text-normal);
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   Visual Interface Showcase (Module 02 Display System)
+   -------------------------------------------------------------------------- */
+.terminal-showcase {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ss-radio {
+  display: none;
+}
+
+.showcase-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tab-label {
+  padding: 0.6rem 1.1rem; /* Margins increased slightly for visual perfection */
+  background-color: rgba(15, 23, 42, 0.02);
+  border: 1px solid var(--border-screen);
+  color: var(--text-muted);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem; /* Scaled up */
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.tab-label:hover {
+  color: var(--accent-blue);
+  border-color: rgba(29, 78, 216, 0.3);
+  background-color: rgba(29, 78, 216, 0.04);
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .tab-label:hover {
+  color: var(--accent-blue);
+  border-color: rgba(96, 165, 250, 0.3);
+  background-color: rgba(96, 165, 250, 0.04);
+}
+
+/* Tab triggers */
+#ss-tab-1:checked ~ .showcase-tabs .label-1,
+#ss-tab-2:checked ~ .showcase-tabs .label-2,
+#ss-tab-3:checked ~ .showcase-tabs .label-3 {
+  color: var(--accent-blue);
+  background-color: rgba(29, 78, 216, 0.08);
+  border-color: var(--accent-blue);
+  font-weight: 700;
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis #ss-tab-1:checked ~ .showcase-tabs .label-1,
+.theme-toggle-checkbox:checked ~ .terminal-chassis #ss-tab-2:checked ~ .showcase-tabs .label-2,
+.theme-toggle-checkbox:checked ~ .terminal-chassis #ss-tab-3:checked ~ .showcase-tabs .label-3 {
+  background-color: rgba(96, 165, 250, 0.08);
+}
+
+/* Curved CRT display mockup frame */
+.crt-mock-frame {
+  border: 2px solid #1e293b;
+  background-color: #111827; /* Dark chassis chamber backdrop */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .crt-mock-frame {
+  border-color: #020617;
+}
+
+.frame-bezel-title {
+  background-color: #1f2937;
+  border-bottom: 1px solid #374151;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #9ca3af;
+  font-family: var(--font-mono);
+}
+
+.frame-screws {
+  display: flex;
+  gap: 0.4rem;
+  font-size: 0.55rem;
+  opacity: 0.3;
+}
+
+.frame-url {
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+}
+
+.frame-crt-content {
+  position: relative;
+  min-height: 440px;
+  display: flex;
+}
+
+/* Slides management */
+.showcase-slide {
+  display: none;
+  opacity: 0;
+  width: 100%;
+  animation: crtFadeIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+#ss-tab-1:checked ~ .crt-mock-frame .slide-1,
+#ss-tab-2:checked ~ .crt-mock-frame .slide-2,
+#ss-tab-3:checked ~ .crt-mock-frame .slide-3 {
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes crtFadeIn {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Image background rendering */
+.image-grid-backdrop {
+  flex: 1;
+  background-color: #0b0f17;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 16px 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2.25rem;
+  border-bottom: 1px solid #1f2937;
+  min-height: 340px;
+}
+
+.screenshot-img {
+  max-width: 100%;
+  max-height: 290px;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.image-spec-desc {
+  padding: 1.25rem 1.5rem;
+  background-color: #1f2937;
+  color: #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.badge {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  font-weight: 700;
+  border: 1px solid currentColor;
+}
+
+/* --------------------------------------------------------------------------
+   ASCII / Diagnostic logs
+   -------------------------------------------------------------------------- */
+.vector-chart-panel {
+  background-color: var(--bg-input-card);
+  border: 1px solid var(--border-screen);
+  padding: 1.5rem 2rem;
+  border-radius: 6px;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.chart-panel-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-orange);
+  margin-bottom: 1rem;
+}
+
+.vector-ascii {
+  color: var(--text-normal);
+  line-height: 1.4;
+  font-size: 0.85rem;
+}
+
+/* Telemetry Table styling */
+.table-frame {
+  overflow-x: auto;
+}
+
+.terminal-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+  min-width: 500px;
+  font-family: var(--font-sans);
+}
+
+.terminal-matrix-table th, .terminal-matrix-table td {
+  padding: 0.9rem 1.25rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-screen);
+}
+
+.terminal-matrix-table th {
+  color: var(--text-active);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  background-color: rgba(15, 23, 42, 0.02);
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .terminal-matrix-table th {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.terminal-matrix-table td {
+  font-size: 0.85rem;
+}
+
+.terminal-matrix-table td:nth-child(2),
+.terminal-matrix-table td:nth-child(3) {
+  font-family: var(--font-mono);
+}
+
+/* --------------------------------------------------------------------------
+   Retro Console bat Forms
+   -------------------------------------------------------------------------- */
+.gates-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+}
+
+.gate-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.gate-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-active);
+  margin-bottom: 0.5rem;
+}
+
+.gate-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+/* DB Table Input Form style */
+.terminal-db-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background-color: var(--bg-input-card);
+  border: 1px solid var(--border-screen);
+  padding: 1.75rem;
+  border-radius: 6px;
+  flex: 1;
+  font-family: var(--font-mono);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.db-syntax-row {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.syntax-keyword {
+  color: var(--accent-orange);
+  font-weight: 700;
+}
+
+.db-fields-block {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-left: 1.5rem;
+}
+
+.syntax-input-wrap {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+
+.syntax-input-wrap label {
+  margin-right: 0.25rem;
+}
+
+.syntax-input-wrap input {
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--accent-blue);
+  color: var(--accent-blue);
+  padding: 0.2rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  flex: 1;
+}
+
+.syntax-input-wrap input:focus {
+  outline: none;
+  border-bottom-style: solid;
+}
+
+.textarea-wrap {
+  align-items: flex-start;
+}
+
+.textarea-wrap label {
+  margin-top: 0.25rem;
+}
+
+.textarea-wrap textarea {
+  background-color: transparent;
+  border: 1px dashed var(--border-screen);
+  color: var(--text-normal);
+  padding: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  flex: 1;
+  resize: vertical;
+}
+
+.textarea-wrap textarea:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+}
+
+.syntax-end {
+  margin-left: 0.25rem;
+}
+
+.terminal-submit-btn {
+  align-self: flex-start;
+  background-color: transparent;
+  border: 1px solid currentColor;
+  padding: 0.6rem 1.2rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.15s ease;
+}
+
+.terminal-submit-btn.font-teal:hover {
+  background-color: rgba(15, 118, 110, 0.05);
+}
+
+.terminal-submit-btn.font-amber:hover {
+  background-color: rgba(180, 83, 9, 0.05);
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .terminal-submit-btn.font-teal:hover {
+  background-color: rgba(45, 212, 191, 0.05);
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .terminal-submit-btn.font-amber:hover {
+  background-color: rgba(251, 146, 60, 0.05);
+}
+
+/* Config Alert subscription form styles */
+.terminal-sys-form {
+  background-color: var(--bg-input-card);
+  border: 1px solid var(--border-screen);
+  padding: 1.75rem;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex: 1;
+  font-family: var(--font-mono);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.sysctl-config-box {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sysctl-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.sysctl-key {
+  color: var(--accent-orange);
+  font-weight: 700;
+}
+
+.sysctl-val {
+  color: var(--text-active);
+}
+
+.input-sysctl-line input {
+  background-color: rgba(0, 0, 0, 0.01);
+  border: 1px solid var(--border-screen);
+  color: var(--accent-teal);
+  padding: 0.3rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  border-radius: 3px;
+  flex: 1;
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .input-sysctl-line input {
+  background-color: rgba(255,255,255,0.01);
+}
+
+.input-sysctl-line input:focus {
+  outline: none;
+  border-color: var(--accent-teal);
+}
+
+/* --------------------------------------------------------------------------
+   Retro Networks Communication Nodes (Social Nodes Grid)
+   -------------------------------------------------------------------------- */
+.social-nodes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.social-node-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background-color: var(--bg-input-card);
+  border: 1px solid var(--border-screen);
+  padding: 1.25rem 1.5rem;
+  border-radius: 6px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+}
+
+.social-node-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-blue);
+  box-shadow: 0 8px 20px rgba(29, 78, 216, 0.05);
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .social-node-card:hover {
+  box-shadow: 0 8px 20px rgba(96, 165, 250, 0.04);
+}
+
+.node-icon {
+  font-size: 1.75rem;
+}
+
+.node-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.node-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.node-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-active);
+}
+
+/* --------------------------------------------------------------------------
+   Developer Diagnostics Profile Sheet
+   -------------------------------------------------------------------------- */
+.dev-profile-terminal {
+  background-color: var(--bg-input-card);
+  border: 1px solid var(--border-screen);
+  border-left: 4px solid var(--accent-teal); /* Highlights system profile beautifully */
+  padding: 1.5rem 1.75rem;
+  border-radius: 6px;
+  margin-bottom: 2rem;
+  font-family: var(--font-mono);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.profile-header {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-bottom: 1px dashed var(--border-screen);
+  padding-bottom: 0.5rem;
+}
+
+.profile-body-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.status-line {
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.status-line .key {
+  color: var(--accent-orange);
+  font-weight: 700;
+}
+
+.status-line .val {
+  color: var(--text-normal);
+}
+
+.status-line .val.font-teal {
+  color: var(--accent-teal);
+  font-weight: 700;
+}
+
+.status-line .val.font-blue {
+  color: var(--accent-blue);
+}
+
+.profile-footer-gate {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  border-top: 1px dashed var(--border-screen);
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.linkedin-launch-btn {
+  text-decoration: none;
+  background-color: var(--accent-blue);
+  color: #ffffff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+  border: 1px solid var(--accent-blue);
+}
+
+.linkedin-launch-btn:hover {
+  background-color: transparent;
+  color: var(--accent-blue);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.1);
+}
+
+.theme-toggle-checkbox:checked ~ .terminal-chassis .linkedin-launch-btn:hover {
+  color: var(--accent-blue);
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.1);
+}
+
+/* Inside Screen Footer status bar */
+.screen-footer {
+  background-color: rgba(15, 23, 42, 0.02);
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-screen);
+  padding: 0.6rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.screen-footer .blink {
+  animation: blinkAnim 1.2s infinite;
+  color: var(--accent-teal);
+}
+
+@keyframes blinkAnim {
+  0% { opacity: 0.2; }
+  50% { opacity: 1; }
+  100% { opacity: 0.2; }
+}
+
+/* Responsive Styles */
+@media (max-width: 950px) {
+  .terminal-chassis {
+    margin: 2rem auto;
+    width: 96%;
+    padding: 0.75rem;
+  }
+
+  .console-module-body {
+    padding: 2.25rem 1.5rem;
+  }
+
+  .console-module-header {
+    padding: 0.8rem 1.5rem;
+  }
+
+  .gates-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .binary-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .tech-schematics {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .image-grid-backdrop {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .terminal-headline {
+    font-size: 1.65rem;
+  }
+
+  .terminal-prose {
+    font-size: 0.95rem;
+  }
+
+  .screen-chrome {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .showcase-tabs {
+    flex-direction: column;
+  }
+}
