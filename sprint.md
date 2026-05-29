@@ -927,3 +927,5 @@ C:\Users\karth\Documents\GeminiCliProjects\Vakh\src-tauri\target\release\bundle
 - Provided step-by-step instructions for hosting `src/index.html` on GitHub Pages.
 - Checked out the `landing-page` branch and integrated a themed SmartScreen Notice block into `index.html` and `styles.css`.
 - Provided step-by-step instructions on switching the GitHub Pages deployment source to the `landing-page` branch.
+- Detailed step-by-step workflow for creating a GitHub Beta Release, uploading assets, and linking the download button in `index.html`.
+- Updated `index.html` on the `landing-page` branch with the live beta release installer download URL (`VAKH_0.2.0_x64-setup.exe`).
