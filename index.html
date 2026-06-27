@@ -23,9 +23,10 @@
     <div class="nav-container">
       <a href="#" class="brand">vakh</a>
       <nav class="nav-menu">
-        <a href="#experience" class="nav-link">Experience</a>
-        <a href="#video-demo" class="nav-link">Demo</a>
+        <a href="#experience" class="nav-link">Overview</a>
         <a href="#why-vakh" class="nav-link">Features</a>
+        <a href="#video-demo" class="nav-link">Purpose</a>
+        <a href="#downloads-counter" class="nav-link">Impact</a>
         <a href="#creator" class="nav-link">Creator</a>
         <a href="#download" class="nav-btn-primary">Download</a>
       </nav>
@@ -89,23 +90,6 @@
             </div>
             <p class="capsule-description">A floating, ambient interface that rests quietly on your desktop. It stays invisible until you tap Control twice.</p>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Video Demo Section (Replacing simulation demo) -->
-    <section id="video-demo" class="video-demo-section">
-      <div class="section-container">
-        <div class="video-header">
-          <h2 class="section-title">See it in action.</h2>
-          <p class="section-subtitle">Watch Vakh capture speech, evaluate audio voice activity, and perform real-time offline transcription.</p>
-        </div>
-
-        <div class="video-wrapper glass-card">
-          <video class="demo-video-element" autoplay muted loop playsinline>
-            <source src="src/assets/app_launch_clicks.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
         </div>
       </div>
     </section>
@@ -177,16 +161,35 @@
       </div>
     </section>
 
+    <!-- Video Demo Section (Purpose) -->
+    <section id="video-demo" class="video-demo-section">
+      <div class="section-container">
+        <div class="video-header">
+          <h2 class="section-title">See it in action.</h2>
+          <p class="section-subtitle">Watch Vakh capture speech, evaluate audio voice activity, and perform real-time offline transcription.</p>
+        </div>
+
+        <div class="video-wrapper glass-card">
+          <video class="demo-video-element" autoplay muted loop playsinline>
+            <source src="src/assets/app_launch_clicks.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+    </section>
+
     <!-- Global Downloads Counter & Water Wave Celebration Section -->
     <section id="downloads-counter" class="downloads-counter-section">
       <div class="section-container">
-        <div class="counter-celebration-card glass-card" id="water-wave-card">
-          <div class="water-ripple-container" id="ripple-container"></div>
-          <div class="celebration-badge">⚡ Global Adoption</div>
-          <h2 class="counter-number-display"><span id="download-count-val">1,248</span>+</h2>
-          <p class="counter-label">Total Voice Downloads & Active Workspace Installs</p>
-          <div class="water-interactive-hint">
-            <span class="water-icon">💧</span> Click anywhere on this card to trigger digital water wave ripples
+        <div class="counter-celebration-wrapper">
+          <div class="outer-wave-container" id="outer-ripple-container"></div>
+          <div class="counter-celebration-card glass-card" id="water-wave-card">
+            <div class="celebration-badge">⚡ Global Adoption</div>
+            <h2 class="counter-number-display"><span id="download-count-val">500</span>+</h2>
+            <p class="counter-label">Total Voice Downloads & Active Workspace Installs</p>
+            <div class="water-interactive-hint">
+              <span class="water-icon">💧</span> Click to celebrate global voice adoption
+            </div>
           </div>
         </div>
       </div>

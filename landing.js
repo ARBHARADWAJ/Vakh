@@ -80,15 +80,27 @@ document.addEventListener('DOMContentLoaded', () => {
     carouselContainer.addEventListener('touchend', startAutoScroll);
   }
 
-  // Live GitHub Release Download Counter & Water Ripple Animation
+  // Live GitHub Release Download Counter & Outer Water Ripple Celebration
   const countValEl = document.getElementById('download-count-val');
   const waterCard = document.getElementById('water-wave-card');
-  const rippleContainer = document.getElementById('ripple-container');
-  const downloadBtns = document.querySelectorAll('a[href*="releases/download"], .btn-primary, .nav-btn-primary');
+  const outerRippleContainer = document.getElementById('outer-ripple-container');
+  const counterSection = document.getElementById('downloads-counter');
+  const downloadSection = document.getElementById('download');
 
-  let baseDownloadCount = 1248; // Base fallback global count
+  // Load persisted count from localStorage or default to 500
+  const STORAGE_KEY = 'vakh_global_download_count';
+  let baseDownloadCount = parseInt(localStorage.getItem(STORAGE_KEY), 10) || 500;
 
-  // Fetch real download count from GitHub API
+  function updateCountDisplay() {
+    if (countValEl) {
+      countValEl.textContent = baseDownloadCount.toLocaleString();
+    }
+  }
+
+  // Initial display update
+  updateCountDisplay();
+
+  // Fetch real download count from GitHub API and sync with local storage
   async function fetchGitHubDownloads() {
     try {
       const res = await fetch('https://api.github.com/repos/ARBHARADWAJ/Vakh/releases');
@@ -103,62 +115,68 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
         if (total > 0) {
-          baseDownloadCount = Math.max(baseDownloadCount, total);
+          baseDownloadCount = Math.max(baseDownloadCount, total, 500);
+          localStorage.setItem(STORAGE_KEY, baseDownloadCount);
         }
       }
     } catch (e) {
-      console.log('Using static download count fallback');
+      console.log('Using static/persisted download count fallback');
     }
     updateCountDisplay();
   }
 
-  function updateCountDisplay() {
-    if (countValEl) {
-      countValEl.textContent = baseDownloadCount.toLocaleString();
-    }
-  }
-
   fetchGitHubDownloads();
 
-  // Interactive 3 Circular Blue Digital Water Waves
-  function createDigitalWaterRipples(e, targetContainer) {
-    const rect = targetContainer.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+  // 3 Concentric Outer Digital Water Waves Radiating Outward Around Card Container
+  function triggerOuterWaterCelebration() {
+    if (!outerRippleContainer) return;
 
-    // Create 3 concentric expanding rings
+    // Clear existing waves if re-triggered
+    outerRippleContainer.innerHTML = '';
+
     for (let i = 0; i < 3; i++) {
-      const ring = document.createElement('span');
-      ring.className = `digital-water-wave wave-ring-${i + 1}`;
-      ring.style.left = `${x}px`;
-      ring.style.top = `${y}px`;
-      ring.style.animationDelay = `${i * 0.18}s`;
-      targetContainer.appendChild(ring);
+      const wave = document.createElement('div');
+      wave.className = `outer-digital-wave outer-ring-${i + 1}`;
+      wave.style.animationDelay = `${i * 0.25}s`;
+      outerRippleContainer.appendChild(wave);
 
       setTimeout(() => {
-        ring.remove();
-      }, 1400 + (i * 200));
+        wave.remove();
+      }, 1800 + (i * 300));
     }
   }
 
-  if (waterCard && rippleContainer) {
-    waterCard.addEventListener('click', (e) => {
-      createDigitalWaterRipples(e, rippleContainer);
+  if (waterCard) {
+    waterCard.addEventListener('click', () => {
+      triggerOuterWaterCelebration();
     });
   }
 
-  // Increment count on download click and trigger digital water ripples
-  downloadBtns.forEach(btn => {
+  // 1. Navigation & Hero Download buttons -> Smooth scroll to main #download section
+  const heroAndNavDownloadBtns = document.querySelectorAll('.hero-actions .btn-primary, .nav-btn-primary');
+  heroAndNavDownloadBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (downloadSection) {
+        downloadSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // 2. Installer Download Action -> Increment persisted count, auto-scroll to counter, & trigger waves
+  const installerDownloadBtns = document.querySelectorAll('.download-btn-main, a[href*="releases/download"]');
+  installerDownloadBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
       baseDownloadCount++;
+      localStorage.setItem(STORAGE_KEY, baseDownloadCount);
       updateCountDisplay();
-      if (waterCard && rippleContainer) {
-        const rect = waterCard.getBoundingClientRect();
-        const fakeEvent = {
-          clientX: rect.left + rect.width / 2,
-          clientY: rect.top + rect.height / 2
-        };
-        createDigitalWaterRipples(fakeEvent, rippleContainer);
+
+      // Smooth auto scroll up to global adoption counter section
+      if (counterSection) {
+        setTimeout(() => {
+          counterSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          triggerOuterWaterCelebration();
+        }, 300);
       }
     });
   });
