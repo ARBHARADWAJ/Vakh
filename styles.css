@@ -410,6 +410,17 @@ body.dark-theme .navbar {
   margin-bottom: 2rem;
 }
 
+.section-eyebrow {
+  font-family: var(--font-apple);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.8rem;
+  display: block;
+}
+
 .section-title {
   font-family: var(--font-apple);
   font-size: 3rem;
@@ -962,6 +973,60 @@ body.dark-theme .creator-status-badge {
 
 .steps-list strong {
   color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   FAQ Section (Bento Cards)
+   -------------------------------------------------------------------------- */
+.faq-section {
+  padding: 3.5rem 2rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.faq-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.8rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .faq-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.faq-card {
+  padding: 2.2rem;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.faq-card:hover {
+  transform: translateY(-2px);
+}
+
+.faq-card h4 {
+  font-family: var(--font-apple);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.faq-card p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
 }
 
 /* --------------------------------------------------------------------------

@@ -953,3 +953,13 @@ C:\Users\karth\Documents\GeminiCliProjects\Vakh\src-tauri\target\release\bundle
 - Fixed download button click behavior so Hero and Nav buttons smoothly auto-scroll down to the main `#download` section, while the installer file link increments the tally and triggers the outer celebration waves.
 - Set global base adoption download tally to 500+ across [index.html](file:///C:/Users/karth/Documents/GeminiCliProjects/Vakh/index.html) and [landing.js](file:///C:/Users/karth/Documents/GeminiCliProjects/Vakh/landing.js).
 - Updated document title format to "Vakh - Write at the Speed of Thought" in [index.html](file:///C:/Users/karth/Documents/GeminiCliProjects/Vakh/index.html).
+- Refined landing page context and UI architecture by transforming RevPDF-inspired inspiration into native 2-column Bento grids for "Why Offline Matters for Creators" and "Frequently Asked Questions" sections in [index.html](file:///C:/Users/karth/Documents/GeminiCliProjects/Vakh/index.html).
+- Added premium glassmorphism card styling, responsive 2-column grid breakpoints, and hover elevation transitions for both new sections in [styles.css](file:///C:/Users/karth/Documents/GeminiCliProjects/Vakh/styles.css).
+- Updated global navigation header items (`Overview`, `Features`, `Why Offline`, `Purpose`, `Impact`, `FAQ`, `Creator`, `Download`) to provide direct anchor jumps to all sections.
+- Conducted full landing page audit: streamlined header navigation bar to 6 balanced, high-impact items (`Features`, `Purpose`, `Impact`, `FAQ`, `Creator`, `Download`).
+- Eliminated redundant context overlap by removing duplicate `#why-offline` section and consolidating all core privacy and performance highlights directly into the primary Features carousel and FAQ sections in [index.html](file:///C:/Users/karth/Documents/GeminiCliProjects/Vakh/index.html) and [styles.css](file:///C:/Users/karth/Documents/GeminiCliProjects/Vakh/styles.css).
+- Fixed section tag irrelevance by renaming header navigation tag from `Purpose` to `Demo` (`#video-demo`) and adding header title "See Vakh in action".
+- Harmonized page-wide visual alignment by adding standardized uppercase `.section-eyebrow` badges (`CAPABILITIES`, `LIVE DEMONSTRATION`, `SUPPORT & CLARITY`) across all major section headers in [index.html](file:///C:/Users/karth/Documents/GeminiCliProjects/Vakh/index.html) and [styles.css](file:///C:/Users/karth/Documents/GeminiCliProjects/Vakh/styles.css).
+
+
+
