@@ -952,3 +952,4 @@ C:\Users\karth\Documents\GeminiCliProjects\Vakh\src-tauri\target\release\bundle
 - Resolved download count persistence across page refreshes using localStorage sync (`vakh_global_download_count`) combined with live GitHub API releases fallback in [landing.js](file:///C:/Users/karth/Documents/GeminiCliProjects/Vakh/landing.js).
 - Fixed download button click behavior so Hero and Nav buttons smoothly auto-scroll down to the main `#download` section, while the installer file link increments the tally and triggers the outer celebration waves.
 - Set global base adoption download tally to 500+ across [index.html](file:///C:/Users/karth/Documents/GeminiCliProjects/Vakh/index.html) and [landing.js](file:///C:/Users/karth/Documents/GeminiCliProjects/Vakh/landing.js).
+- Updated document title format to "Vakh - Write at the Speed of Thought" in [index.html](file:///C:/Users/karth/Documents/GeminiCliProjects/Vakh/index.html).
