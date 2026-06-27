@@ -3,518 +3,263 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="VAKH - Unified Systems Voice Dictation for Windows. Local-first, Rust-powered high-performance typing.">
-  <title>VAKH // Retro-Futuristic Workstation Console</title>
+  <meta name="description" content="Vakh - Write at the speed of thought. Offline, instant, and secure global voice dictation for Windows.">
+  <title>Vakh // Write at the Speed of Thought</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <!-- Pure CSS Manual Theme Toggle Checkbox -->
-  <input type="checkbox" id="theme-toggle" class="theme-toggle-checkbox">
-
-  <!-- 60FPS Pure CSS Fluid Mesh Gradient Background (Simulation of WebGL Fluid Canvas) -->
-  <div class="fluid-mesh-bg">
-    <div class="fluid-blob blob-blue"></div>
-    <div class="fluid-blob blob-coral"></div>
-    <div class="fluid-blob blob-amber"></div>
-    <div class="fluid-blob blob-mint"></div>
+  <!-- Background Fluid Mesh Overlay -->
+  <div class="mesh-background">
+    <div class="mesh-orb orb-indigo"></div>
+    <div class="mesh-orb orb-violet"></div>
   </div>
 
-  <!-- Interactive Terminal Workstation Chassis -->
-  <div class="terminal-chassis">
-    
-    <!-- Outer Hardware Bezel Screen Header -->
-    <header class="chassis-header">
-      <div class="hardware-brand">
-        <span class="bezel-screw">⨂</span>
-        VAKH SYSTEMS // MULTI-MODAL TERMINAL // MODEL V-1
-      </div>
-
-      <!-- Tactile Bezel Theme Switcher Toggle -->
-      <div class="theme-switch-container">
-        <span class="toggle-label-text">SYS_THEME:</span>
-        <label for="theme-toggle" class="hardware-switch">
-          <span class="switch-knob"></span>
-        </label>
-        <span class="theme-indicator light-indicator">LIGHT</span>
-        <span class="theme-indicator dark-indicator">DARK</span>
-      </div>
-
-      <div class="hardware-leds">
-        <div class="led power-led active"><span>POWER</span></div>
-        <div class="led rx-led flashing"><span>RX_DATA</span></div>
-        <div class="led disk-led idle"><span>SYS_LOCK</span></div>
-      </div>
-    </header>
-
-    <!-- Main CRT Glass Screen Wrapper -->
-    <div class="crt-screen">
-      
-      <!-- Vintage Scanline Screen Glare Overlay -->
-      <div class="screen-scanlines"></div>
-      
-    <!-- Inside Screen Interface Chrome -->
-    <div class="screen-chrome">
-      <nav class="system-nav">
-        <a href="#core" class="nav-btn">[01] OVERVIEW.SYS</a>
-        <a href="#showcase" class="nav-btn">[02] DISP_INTERFACE.SYS</a>
-        <a href="#features" class="nav-btn">[03] ADVANTAGES.CFG</a>
-        <a href="#telemetry" class="nav-btn">[04] CPU_RAM_LOGS.TXT</a>
-        <a href="#utilities" class="nav-btn">[05] CONTROL_GATES.BAT</a>
-        <a href="#socials" class="nav-btn">[06] NETWORK_LINKS.SYS</a>
+  <!-- Global Header Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="#" class="brand">vakh</a>
+      <nav class="nav-menu">
+        <a href="#experience" class="nav-link">Experience</a>
+        <a href="#video-demo" class="nav-link">Demo</a>
+        <a href="#why-vakh" class="nav-link">Features</a>
+        <a href="#creator" class="nav-link">Creator</a>
+        <a href="#download" class="nav-btn-primary">Download</a>
       </nav>
-      <span class="system-ip font-blue">vakh://127.0.0.1:8080</span>
+      <div class="theme-switcher">
+        <button id="theme-toggle-btn" aria-label="Toggle theme">
+          <svg class="sun-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.77" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2" style="display: none;">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
     </div>
+  </header>
 
-    <!-- Main Scrolling CRT Viewport -->
-    <main class="crt-viewport">
-      
-      <!-- MODULE 01: OVERVIEW -->
-      <section id="core" class="console-module">
-        <div class="console-module-header">
-          <span class="prompt-arrow">A:\VAKH\></span> run overview.exe
-          <span class="module-number">[STAGE_01]</span>
+  <!-- Hero Section -->
+  <main class="main-content">
+    <section class="hero-section">
+      <div class="hero-container">
+        <span class="hero-eyebrow">Meet Vakh</span>
+        <h1 class="hero-title">Write at the speed of thought.</h1>
+        <p class="hero-lead">Vakh turns your spoken words into written text instantly, directly inside any app. No configuration. No subscriptions. No distractions.</p>
+        <div class="hero-actions">
+          <a href="#download" class="btn-primary">Get Vakh Free</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Experience Showcase (Ambient Focus HUD) -->
+    <section id="experience" class="experience-section">
+      <div class="section-container">
+        <div class="glass-card main-capsule">
+          <div class="capsule-header">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span class="capsule-title">VAKH - Focused Writing HUD</span>
+          </div>
+          <div class="capsule-body">
+            <div class="hud-mock">
+              <div class="hud-status">
+                <span class="status-indicator-ring"></span>
+                <span class="status-text">Ready to dictate</span>
+              </div>
+              <div class="waveform-animation">
+                <span class="bar bar-1"></span>
+                <span class="bar bar-2"></span>
+                <span class="bar bar-3"></span>
+                <span class="bar bar-4"></span>
+                <span class="bar bar-5"></span>
+              </div>
+            </div>
+            <p class="capsule-description">A floating, ambient interface that rests quietly on your desktop. It stays invisible until you tap Control twice.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Video Demo Section (Replacing simulation demo) -->
+    <section id="video-demo" class="video-demo-section">
+      <div class="section-container">
+        <div class="video-header">
+          <h2 class="section-title">See it in action.</h2>
+          <p class="section-subtitle">Watch Vakh capture speech, evaluate audio voice activity, and perform real-time offline transcription.</p>
         </div>
 
-        <div class="console-module-body">
-          <h1 class="terminal-headline">Local Global Voice Dictation for Windows</h1>
+        <div class="video-wrapper glass-card">
+          <video class="demo-video-element" autoplay muted loop playsinline>
+            <source src="src/assets/app_launch_clicks.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section (Horizontal Sliding Carousel Bento Grid) -->
+    <section id="why-vakh" class="features-section">
+      <div class="section-container">
+        <div class="features-header">
+          <h2 class="section-title">Designed for seamless creation.</h2>
+          <p class="section-subtitle">A collection of premium local-first features tailored for writing productivity.</p>
+        </div>
+
+        <!-- Carousel navigation indicators -->
+        <div class="carousel-nav-hints">
+          <span>Swipe or scroll horizontally to explore</span>
+          <div class="nav-arrows">
+            <button id="carousel-prev" class="carousel-arrow" aria-label="Previous slide">&#8592;</button>
+            <button id="carousel-next" class="carousel-arrow" aria-label="Next slide">&#8594;</button>
+          </div>
+        </div>
+
+        <div class="features-carousel-container">
+          <div class="features-grid">
+            
+            <!-- Card 1: Private -->
+            <div class="feature-card glass-card card-purple">
+              <div class="card-icon-wrap">🛡️</div>
+              <h3>100% Private by Design</h3>
+              <p>Your voice never leaves your device. Vakh works completely offline, keeping your raw notes and scripts safe from cloud servers.</p>
+            </div>
+            
+            <!-- Card 2: Lightweight -->
+            <div class="feature-card glass-card card-blue">
+              <div class="card-icon-wrap">🍃</div>
+              <h3>Light as Air</h3>
+              <p>Designed to utilize minimal CPU and memory, leaving your device completely free for creative tasks like rendering, writing, or coding.</p>
+            </div>
+            
+            <!-- Card 3: Seamless Integration -->
+            <div class="feature-card glass-card card-gold">
+              <div class="card-icon-wrap">✨</div>
+              <h3>Integrates Everywhere</h3>
+              <p>Vakh injects keystrokes natively. It types into Notion, Word, Premiere Pro, Slack, or any workspace window automatically.</p>
+            </div>
+
+            <!-- Card 4: Double Control Trigger -->
+            <div class="feature-card glass-card card-silver">
+              <div class="card-icon-wrap">⌨️</div>
+              <h3>Double Control Tap</h3>
+              <p>Activate voice typing with a rapid double-tap of either Left or Right Ctrl key. It stays hidden until you need it.</p>
+            </div>
+
+            <!-- Card 5: Local Speech Processor -->
+            <div class="feature-card glass-card card-bronze">
+              <div class="card-icon-wrap">🎙️</div>
+              <h3>Local Speech Filters</h3>
+              <p>An integrated speech processor detects active voice segments while ignoring mechanical keyboard clicks and fan hums.</p>
+            </div>
+
+            <!-- Card 6: Standalone Executable -->
+            <div class="feature-card glass-card card-platinum">
+              <div class="card-icon-wrap">📦</div>
+              <h3>Single Standalone File</h3>
+              <p>Packaged into a single standalone binary. No python environments, no DLL setup, and no dependencies to manage.</p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Creator Info Section (Bento Profile Box) -->
+    <section id="creator" class="creator-section">
+      <div class="section-container">
+        <div class="creator-card glass-card">
+          <div class="creator-grid">
+            <div class="creator-visual">
+              <div class="visual-avatar">RB</div>
+              <div class="creator-status-badge">
+                <span class="pulse-indicator"></span>
+                <span>Open to Opportunities</span>
+              </div>
+            </div>
+            <div class="creator-details">
+              <span class="creator-title">About the Creator</span>
+              <h2>Ravisankar Bharadwaj Ammanamanchi</h2>
+              <p class="creator-bio">Actively looking for <strong>Full-Stack & AI Engineering</strong> roles. Passionate about building native desktop interfaces, high-performance engines, and fluid user experiences with clean code structures.</p>
+              <div class="creator-socials">
+                <a href="https://www.linkedin.com/in/ravisankar-bharadwaj-ammanamanchi-735944193/" target="_blank" class="creator-btn">
+                  <span>LinkedIn Profile</span>
+                </a>
+                <a href="mailto:ravisankar.bharadwaj@gmail.com" class="creator-btn secondary">
+                  <span>Get in Touch</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download Section -->
+    <section id="download" class="download-section">
+      <div class="section-container">
+        <div class="download-box glass-card">
+          <span class="badge">Windows App</span>
+          <h2>Ready to transform your writing workflow?</h2>
+          <p>Get the standalone installer and start dictating in seconds.</p>
           
-          <p class="terminal-prose">
-            <span class="highlight-word">VAKH</span> is a local-first, zero-telemetry voice keyboard injector compiled natively in Rust. It runs seamlessly on Windows 10 & 11, baking a high-accuracy Whisper core directly inside a single, zero-dependency standalone binary. Activated globally via <span class="hotkey-caps">Double Ctrl</span>.
-          </p>
-
-          <!-- Retro Spec Sheet Matrix -->
-          <div class="telemetry-specs-matrix">
-            <div class="spec-matrix-cell">
-              <span class="matrix-lbl">COMPILER_TARGET</span>
-              <span class="matrix-val font-teal">Rust / Win64 x86_64</span>
-            </div>
-            <div class="spec-matrix-cell">
-              <span class="matrix-lbl">ACTIVE_FOOTPRINT</span>
-              <span class="matrix-val">14.2 MB RAM Gated</span>
-            </div>
-            <div class="spec-matrix-cell">
-              <span class="matrix-lbl">BINARY_PACKAGE</span>
-              <span class="matrix-val">~80 MB Standalone</span>
-            </div>
-            <div class="spec-matrix-cell">
-              <span class="matrix-lbl">CONTEXT_LATENCY</span>
-              <span class="matrix-val font-blue">20s Rolling Buffer</span>
-            </div>
-          </div>
-
-          <!-- Glowing Compile and Download Station -->
-          <div class="download-chassis">
-            <h3 class="chassis-section-title">COMPILE_AND_EXECUTE::(BINARY_DOWNLOADS)</h3>
-            
-            <div class="binary-grid">
-              <a href="https://github.com/ARBHARADWAJ/Vakh/releases/download/v0.2.0-beta/VAKH_0.2.0_x64-setup.exe" class="binary-card msi-card">
-                <div class="card-icon">📦</div>
-                <div class="card-desc">
-                  <span class="card-title">Download Installer (.exe)</span>
-                  <span class="card-sub">Full Windows packaging & auto-startup registry hook</span>
-                </div>
-                <span class="card-action-btn">INSTALL.EXE</span>
-              </a>
-
-              <!-- Portable Core Binary currently in development -->
-              <div class="binary-card exe-card in-development">
-                <div class="card-icon">⚙️</div>
-                <div class="card-desc">
-                  <span class="card-title">Portable Core Binary (.exe) <span class="dev-badge">[IN DEV]</span></span>
-                  <span class="card-sub">Direct system binary injection, zero setup required. Status: Active Compilation.</span>
-                </div>
-                <span class="card-action-btn disabled">COMPILING.SYS</span>
-              </div>
-            </div>
-
-            <!-- Windows SmartScreen Notice Box -->
-            <div class="smartscreen-notice-card">
-              <div class="notice-header">
-                <span class="notice-icon">⚠️</span>
-                <span class="notice-title">SYS_ALERT: WINDOWS SMARTSCREEN NOTICE</span>
-              </div>
-              <div class="notice-body">
-                <p>When installing Vakh, you may see a Windows SmartScreen warning. This is because the app is not yet code signed.</p>
-                <div class="notice-steps">
-                  <span class="steps-title">To Install:</span>
-                  <ol>
-                    <li>Click <strong class="step-highlight">"More info"</strong></li>
-                    <li>Click <strong class="step-highlight">"Run anyway"</strong></li>
-                  </ol>
-                </div>
-                <p class="notice-footer">This is safe — Vakh is open source. You can review the full source code on <a href="https://github.com/ARBHARADWAJ/Vakh" target="_blank" class="notice-link">GitHub</a>.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- MODULE 02: INTERFACE SHOWCASE -->
-      <section id="showcase" class="console-module">
-        <div class="console-module-header">
-          <span class="prompt-arrow">A:\VAKH\></span> load display_telemetry.sys
-          <span class="module-number">[STAGE_02]</span>
-        </div>
-
-        <div class="console-module-body">
-          <p class="terminal-prose muted">
-            Visual inspection of the low-latency, transparent glass HUD. Seamlessly rests on your screen as a high-fidelity systems console overlay.
-          </p>
-
-          <!-- Showcase Interactive Workstation -->
-          <div class="terminal-showcase">
-            <!-- Hidden Radio Selectors (Exactly 3 slides now) -->
-            <input type="radio" name="screenshot-group" id="ss-tab-1" class="ss-radio" checked>
-            <input type="radio" name="screenshot-group" id="ss-tab-2" class="ss-radio">
-            <input type="radio" name="screenshot-group" id="ss-tab-3" class="ss-radio">
-
-            <!-- CRT Showcase Navigation Tabs -->
-            <div class="showcase-tabs">
-              <label for="ss-tab-1" class="tab-label label-1">[01] Default_App_Launch.sys</label>
-              <label for="ss-tab-2" class="tab-label label-2">[02] Settings_And_Config.sys</label>
-              <label for="ss-tab-3" class="tab-label label-3">[03] App_Working_Execution.sys</label>
-            </div>
-
-            <!-- Vintage Mock CRT Monitor Frame -->
-            <div class="crt-mock-frame">
-              <div class="frame-bezel-title">
-                <div class="frame-screws"><span>◉</span><span>◉</span></div>
-                <span class="frame-url">VAKH MONITOR // DISPLAY_GATE // LIVE</span>
-              </div>
-              
-              <div class="frame-crt-content">
-                <!-- Slide 1: Default app look when launched -->
-                <div class="showcase-slide slide-1">
-                  <div class="image-grid-backdrop">
-                    <img src="src/assets/Screenshot 2026-05-28 213347.png" alt="VAKH - Default App Look When Launched" class="screenshot-img">
-                  </div>
-                  <div class="image-spec-desc">
-                    <span class="badge font-blue">VAKH Launcher State</span>
-                    <p>Minimal voice dictation overlay. Restfully captures speech with pure translucent acrylic backdrop-filters upon double Ctrl launch.</p>
-                  </div>
-                </div>
-
-                <!-- Slide 2: Settings & Config Interface (3rd image, similar to first settings view) -->
-                <div class="showcase-slide slide-2">
-                  <div class="image-grid-backdrop">
-                    <img src="src/assets/Screenshot 2026-05-24 215659.png" alt="VAKH - Settings and Config Interface" class="screenshot-img">
-                  </div>
-                  <div class="image-spec-desc">
-                    <span class="badge font-orange">Rust Engine Config</span>
-                    <p>Configure local voice settings, activation sensitivity levels, and system-wide injection behavior.</p>
-                  </div>
-                </div>
-
-                <!-- Slide 3: Working of App (4th image showing live database history and logs) -->
-                <div class="showcase-slide slide-3">
-                  <div class="image-grid-backdrop">
-                    <img src="src/assets/Screenshot 2026-05-28 213422.png" alt="VAKH - Active Application Working" class="screenshot-img">
-                  </div>
-                  <div class="image-spec-desc">
-                    <span class="badge font-teal">Active Win32 Pipeline</span>
-                    <p>Inspect past transcriptions, destination application process tags, and real-time SQLite logs.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- MODULE 03: KEY ADVANTAGES -->
-      <section id="features" class="console-module">
-        <div class="console-module-header">
-          <span class="prompt-arrow">A:\VAKH\></span> cat advantages.cfg
-          <span class="module-number">[STAGE_03]</span>
-        </div>
-
-        <div class="console-module-body">
-          <p class="terminal-prose muted">
-            Engineered for developers who prioritize local computing, instant activation speed, and clean code layouts.
-          </p>
-
-          <div class="tech-schematics">
-            <div class="schematic-item">
-              <span class="schematic-label">20s Rolling Context Buffer</span>
-              <span class="schematic-desc">
-                Paces transcription through a sliding voice window. Continuously refines and overwrites draft words, outputting finalized text with full grammatical context.
-              </span>
-            </div>
-            
-            <div class="schematic-item">
-              <span class="schematic-label">Native Windows DSP Hook</span>
-              <span class="schematic-desc">
-                Accesses high-efficiency native Windows Speech API layers. Prevents massive local neural network allocation, keeping memory usage capped at ~14.2 MB.
-              </span>
-            </div>
-
-            <div class="schematic-item">
-              <span class="schematic-label">Paced Win32 Keystroke Injection</span>
-              <span class="schematic-desc">
-                Bypasses clipboard manipulation entirely. Emits keystrokes with 3ms micro-delays directly into focused handles to eliminate system stuck keys under load.
-              </span>
-            </div>
-
-            <div class="schematic-item">
-              <span class="schematic-label">Local SQLite Data Log</span>
-              <span class="schematic-desc">
-                Natively tracks target processes securely on local storage. Automatically executes self-cleaning logs routine for entries older than 30 days.
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- MODULE 04: TELEMETRY LOGS -->
-      <section id="telemetry" class="console-module">
-        <div class="console-module-header">
-          <span class="prompt-arrow">A:\VAKH\></span> read telemetry_benchmarks.log
-          <span class="module-number">[STAGE_04]</span>
-        </div>
-
-        <div class="console-module-body">
-          <p class="terminal-prose muted">
-            CPU and memory metrics captured under active operations.
-          </p>
-
-          <!-- Vector Console RAM Chart -->
-          <div class="vector-chart-panel">
-            <div class="chart-panel-title">MEM_ALLOCATION_MATRIX.MAP</div>
-            <pre class="vector-ascii">
-MB RAM
- 20 |
- 15 |                       __________________ (VAKH: stable 14.2MB)
- 10 |                      /
-  5 |                     /
-  0 |____________________/
-     0s                 15s                30s                60s
-            </pre>
-          </div>
-
-          <!-- Console Matrix Table -->
-          <div class="table-frame">
-            <table class="terminal-matrix-table">
-              <thead>
-                <tr>
-                  <th>PIPELINE_STAGE</th>
-                  <th>LATENCY_BUFFER</th>
-                  <th>CPU_LOAD</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Mic Wave Capture (CPAL)</td>
-                  <td>&lt;1.5ms Realtime</td>
-                  <td>~0.01%</td>
-                </tr>
-                <tr>
-                  <td>RMS Gate Evaluation</td>
-                  <td>&lt;0.2ms Realtime</td>
-                  <td>~0.00%</td>
-                </tr>
-                <tr>
-                  <td>Rolling Context Parser</td>
-                  <td>20-Second High-Context Sliding Buffer</td>
-                  <td>~1.20% (Active)</td>
-                </tr>
-                <tr>
-                  <td>Win32 Caret Injection</td>
-                  <td>~3.0ms Paced Inject</td>
-                  <td>~0.05%</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- MODULE 05: CONTROL GATES -->
-      <section id="utilities" class="console-module">
-        <div class="console-module-header">
-          <span class="prompt-arrow">A:\VAKH\></span> config control_gates.bat
-          <span class="module-number">[STAGE_05]</span>
-        </div>
-
-        <div class="console-module-body">
-          <div class="gates-grid">
-            
-            <!-- Retro SQL Insertion Feedback Gate -->
-            <div class="gate-card">
-              <h3 class="gate-title">Transmit Developer Feedback</h3>
-              <p class="gate-desc">Insert your diagnostic experiences directly into our static telemetry pipeline logs.</p>
-              
-              <form class="terminal-db-form" action="#" method="POST" onsubmit="event.preventDefault(); alert('Query executed successfully: INSERT 1');">
-                <div class="db-syntax-row">
-                  <span class="syntax-keyword">INSERT INTO</span> feedback (name, message) <span class="syntax-keyword">VALUES</span> (
-                </div>
-                
-                <div class="db-fields-block">
-                  <div class="syntax-input-wrap">
-                    <label for="db-name">'</label>
-                    <input type="text" id="db-name" placeholder="Linus Torvalds" required>
-                    <span class="syntax-end">',</span>
-                  </div>
-                  
-                  <div class="syntax-input-wrap textarea-wrap">
-                    <label for="db-msg">'</label>
-                    <textarea id="db-msg" rows="3" placeholder="Describe speech accuracy, active environment specs..." required></textarea>
-                    <span class="syntax-end">'</span>
-                  </div>
-                </div>
-
-                <div class="db-syntax-row">
-                  );
-                </div>
-
-                <button type="submit" class="terminal-submit-btn font-teal">EXECUTE_INSERT.EXE</button>
-              </form>
-            </div>
-
-            <!-- Retro Config File Subscription Gate -->
-            <div class="gate-card">
-              <h3 class="gate-title">Configure Alerts Notifier</h3>
-              <p class="gate-desc">Declare your email target to listen to stable changelogs and system releases.</p>
-              
-              <form class="terminal-sys-form" action="#" method="POST" onsubmit="event.preventDefault(); alert('Config updated successfully.');">
-                <div class="sysctl-config-box">
-                  <div class="sysctl-line">
-                    <span class="sysctl-key">SUBSCRIPTION_ACTIVE</span>
-                    <span class="sysctl-val">= true</span>
-                  </div>
-                  
-                  <div class="input-sysctl-line">
-                    <label for="conf-email" class="sysctl-key">NOTIFY_TARGET_ADDRESS</label>
-                    <span class="sysctl-val">=</span>
-                    <input type="email" id="conf-email" placeholder="dev@protonmail.com" required>
-                  </div>
-
-                  <div class="sysctl-line">
-                    <span class="sysctl-key">ALERT_LEVEL</span>
-                    <span class="sysctl-val">= STABLE_ONLY</span>
-                  </div>
-
-                  <div class="sysctl-line">
-                    <span class="sysctl-key">MAX_TELEMETRY_EMAILS</span>
-                    <span class="sysctl-val">= 1_PER_MONTH</span>
-                  </div>
-                </div>
-
-                <button type="submit" class="terminal-submit-btn font-amber">SYSCTL -W UPDATE</button>
-              </form>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      <!-- MODULE 06: COMMUNICATION NODES (SOCIALS) -->
-      <section id="socials" class="console-module">
-        <div class="console-module-header">
-          <span class="prompt-arrow">A:\VAKH\></span> run network_links.exe
-          <span class="module-number">[STAGE_06]</span>
-        </div>
-
-        <div class="console-module-body">
-          <h3 class="terminal-headline">VAKH Systems Communications Directory</h3>
-          <p class="terminal-prose muted">
-            Connect directly with our core engineering pipelines, developer logs, and active support terminals.
-          </p>
-
-          <!-- Developer Diagnostics Profile Panel -->
-          <div class="dev-profile-terminal">
-            <div class="profile-header">
-              <span class="prefix font-teal">[SYSTEM_DIAGNOSTICS]</span> // SYS_ENGINEER // PROFILE_STATUS
-            </div>
-            <div class="profile-body-content">
-              <div class="status-line">
-                <span class="key">CAREER_STATUS</span> = <span class="val font-teal">"ACTIVE_OPEN_TO_WORK"</span>
-              </div>
-              <div class="status-line">
-                <span class="key">CORE_COMMITMENT</span> = <span class="val">"Building native desktop and web applications with pixel-perfect perfection, robust logic, and top-tier aesthetic design."</span>
-              </div>
-              <div class="status-line">
-                <span class="key">TEAM_COLLABORATION</span> = <span class="val font-blue">"Highly adaptive in collaborative squads, bringing peak alignment, active communication, and strong engineering systems."</span>
-              </div>
-              <div class="status-line">
-                <span class="key">NETWORKING_GOAL</span> = <span class="val font-orange">"Open to new roles, collaboration, and contract pipelines. Let's deploy high-quality solutions together!"</span>
-              </div>
-            </div>
-            <div class="profile-footer-gate">
-              <span class="prefix font-orange">A:\VAKH\></span> run link_linkedin_connection.bat -> 
-              <a href="https://www.linkedin.com/in/ravisankar-bharadwaj-ammanamanchi-735944193/" target="_blank" class="linkedin-launch-btn">CONNECT_VIA_LINKEDIN.EXE</a>
-            </div>
-          </div>
-
-          <!-- Social Node Directory Grid -->
-          <div class="social-nodes-grid">
-            <a href="https://github.com/ARBHARADWAJ/Vakh" target="_blank" class="social-node-card">
-              <span class="node-icon">🐱</span>
-              <div class="node-info">
-                <span class="node-label">GITHUB_REPOSITORY</span>
-                <span class="node-value font-teal">github.com/ARBHARADWAJ/Vakh</span>
-              </div>
-            </a>
-
-            <a href="https://www.linkedin.com/in/ravisankar-bharadwaj-ammanamanchi-735944193/" 
-            target="_blank" class="social-node-card">
-              <span class="node-icon">💼</span>
-              <div class="node-info">
-                <span class="node-label">LINKEDIN_PROFESSIONAL</span>
-                <span class="node-value font-blue">linkedin.com</span>
-              </div>
-            </a>
-
-            <a href="https://medium.com/@arbharadwaj" target="_blank" class="social-node-card">
-              <span class="node-icon">✍️</span>
-              <div class="node-info">
-                <span class="node-label">MEDIUM_DEV_BLOG</span>
-                <span class="node-value">medium.com/@karth</span>
-              </div>
-            </a>
-
-            <a href="mailto:ravisankar.bharadwaj@gmail.com" class="social-node-card">
-              <span class="node-icon">✉️</span>
-              <div class="node-info">
-                <span class="node-label">EMAIL_SYSTEM_TARGET</span>
-                <span class="node-value font-teal">ravisankar.bharadwaj@gmail.com</span>
-              </div>
-            </a>
-
-            <a href="tel:+91 9347860095" class="social-node-card">
-              <span class="node-icon">📞</span>
-              <div class="node-info">
-                <span class="node-label">PHONE_SYSTEM_LINE</span>
-                <span class="node-value font-orange">+91 9347860095</span>
-              </div>
-            </a>
-
-            <a href="https://www.instagram.com/arbharadwaj12/" target="_blank" class="social-node-card">
-              <span class="node-icon">📸</span>
-              <div class="node-info">
-                <span class="node-label">INSTAGRAM_MEDIA_FEED</span>
-                <span class="node-value font-orange">@Bharadwaj</span>
-              </div>
+          <div class="download-action-group">
+            <a href="https://github.com/ARBHARADWAJ/Vakh/releases/download/v0.2.0-beta/VAKH_0.2.0_x64-setup.exe" class="download-btn-main">
+              <span>Download for Windows</span>
+              <span class="download-sub">v0.2.0 Beta setup (.exe)</span>
             </a>
           </div>
+
+          <!-- Windows SmartScreen Box -->
+          <div class="smartscreen-card">
+            <div class="smartscreen-header">
+              <span class="alert-icon">⚠️</span>
+              <h4>Setup Notice</h4>
+            </div>
+            <p>Because Vakh is a local-only community app and isn't signed with a developer license yet, Windows SmartScreen may show a security notice during installation.</p>
+            <div class="steps-list">
+              <span>To bypass:</span>
+              <ol>
+                <li>Click <strong>"More Info"</strong> on the warning window.</li>
+                <li>Click <strong>"Run Anyway"</strong>.</li>
+              </ol>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
+    </section>
+  </main>
 
-    </main>
-
-    <!-- Inside Screen Status Footer -->
-    <footer class="screen-footer">
-      <div class="footer-stat">[MONOMOD ACTIVE]</div>
-      <div class="footer-stat">[ENGINEER: karth / ARBHARADWAJ]</div>
-      <div class="footer-stat blink">[READY_AWAITING_INPUT]</div>
-    </footer>
-
+  <!-- Global Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <span class="brand-logo">vakh</span>
+        <p>A native local-first voice workspace system.</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/ARBHARADWAJ/Vakh" target="_blank" class="footer-link">GitHub</a>
+        <a href="https://www.linkedin.com/in/ravisankar-bharadwaj-ammanamanchi-735944193/" target="_blank" class="footer-link">LinkedIn</a>
+        <a href="mailto:ravisankar.bharadwaj@gmail.com" class="footer-link">Contact</a>
+      </div>
+      <div class="footer-copy">
+        <p>&copy; 2026 Vakh. Open source under MIT license.</p>
+      </div>
     </div>
-    
-  </div>
+  </footer>
 
+  <script src="landing.js"></script>
 </body>
 </html>
