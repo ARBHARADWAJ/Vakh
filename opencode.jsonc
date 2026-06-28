@@ -1,0 +1,53 @@
+{
+  "$schema": "https://opencode.ai/schema.json",
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 5000
+  },
+  "plugin": ["./.opencode/plugin/sound-notification.ts"],
+  "mcp": {
+    "servers": {
+      "filesystem": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\karth\\Documents\\ClaudeCodeProjects", "C:\\Users\\karth\\Desktop"]
+      },
+      "git": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-git", "--repository", "C:\\Users\\karth\\Documents\\GeminiCliProjects\\Vakh"]
+      },
+      "rust-analyzer": {
+        "type": "stdio",
+        "command": "rust-analyzer",
+        "args": []
+      },
+      "tauri": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@tauri-apps/mcp-server"]
+      },
+      "sqlite": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "mcp-server-sqlite", "--db-path", "%LOCALAPPDATA%\\VAKH\\vakh_history.db"]
+      },
+      "playwright": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@playwright/mcp@latest"]
+      },
+      "memory": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-memory"]
+      },
+      "sequential-thinking": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+      }
+    }
+}
+}
