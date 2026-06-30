@@ -138,6 +138,8 @@ pub fn perform_state_transition(
                             p
                         };
 
+                        let mut has_transcribed_periodic = false;
+
                         loop {
                             // 1. Collect all available raw audio
                             while let Ok(samples) = worker_audio_rx.try_recv() {
@@ -155,6 +157,7 @@ pub fn perform_state_transition(
                                         inj.inject_draft(&chunk_text);
                                         inj.commit();
                                         let _ = db_for_worker.log_dictation(&chunk_text, Some(&app_name_for_worker));
+                                        has_transcribed_periodic = true;
                                     }
                                 }
                                 full_session_audio.clear();
@@ -166,7 +169,12 @@ pub fn perform_state_transition(
                                     ContextCommand::Finalize(reply_tx) => {
                                         println!("[Worker] Finalize trigger: {} samples", full_session_audio.len());
                                         let mut final_text = String::new();
-                                        if full_session_audio.len() >= 8_000 {
+                                        let min_samples = if has_transcribed_periodic {
+                                            32_000 // 2.0s minimum for final chunk if we already had a periodic chunk
+                                        } else {
+                                            8_000  // 0.5s minimum for short single dictation
+                                        };
+                                        if full_session_audio.len() >= min_samples {
                                             if let Ok(_) = ctx_state.full(final_params.clone(), &full_session_audio) {
                                                 final_text = collect_segments(&mut ctx_state);
                                             }
