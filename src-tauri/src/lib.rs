@@ -144,9 +144,9 @@ pub fn perform_state_transition(
                                 full_session_audio.extend_from_slice(&samples);
                             }
 
-                            // 2. Periodic 20-second transcribing & appending
-                            if full_session_audio.len() >= 16000 * 20 {
-                                println!("[Worker] Periodic 20s append trigger: {} samples", full_session_audio.len());
+                            // 2. Periodic 15-second transcribing & appending
+                            if full_session_audio.len() >= 16000 * 15 {
+                                println!("[Worker] Periodic 15s append trigger: {} samples", full_session_audio.len());
                                 if let Ok(_) = ctx_state.full(final_params.clone(), &full_session_audio) {
                                     let chunk_text = collect_segments(&mut ctx_state);
                                     println!("[Worker] Periodic transcribed text: '{}'", chunk_text);
@@ -219,7 +219,7 @@ pub fn perform_state_transition(
                         while let Ok(status) = status_rx.try_recv() {
                             match status {
                                 AudioStatus::Idle => {
-                                    println!("[System] Auto-Stop (7s silence)");
+                                    println!("[System] Auto-Stop ({}s silence)", config_for_thread.silence_timeout);
                                     auto_halt = true;
                                 }
                                 _ => {

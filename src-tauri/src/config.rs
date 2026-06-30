@@ -21,7 +21,7 @@ impl Default for AppConfig {
         Self {
             language: "en".to_string(),
             threads: 2,
-            silence_timeout: 7.0,
+            silence_timeout: 15.0,
             typing_delay: 8,
             backspace_delay: 25,
             vad_sensitivity: 0, // Quality mode
