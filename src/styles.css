@@ -228,3 +228,40 @@ body {
   0%, 100% { opacity: 1; transform: scaleY(1); }
   50% { opacity: 0.6; transform: scaleY(0.8); }
 }
+
+/* State: Busy (Amber/Yellow warning glow) */
+#app.is-busy {
+  border-color: rgba(255, 179, 0, 0.35);
+  box-shadow: 0 0 16px rgba(255, 179, 0, 0.3),
+              0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+#app.is-busy .bar {
+  background: #ffb300 !important;
+  box-shadow: 0 0 8px rgba(255, 179, 0, 0.6) !important;
+  animation: pulse 1.0s infinite ease-in-out !important;
+}
+
+#app.is-busy #status-text {
+  color: #ffb300 !important;
+}
+
+/* Circular border flash keyframe animation for finalizing completed transition */
+#app.border-flash {
+  animation: borderFlashEffect 1.2s ease-out;
+}
+
+@keyframes borderFlashEffect {
+  0% {
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+  30% {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 20px var(--accent-glow), 0 8px 24px rgba(0, 0, 0, 0.6);
+  }
+  100% {
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+}

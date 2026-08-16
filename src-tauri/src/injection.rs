@@ -37,30 +37,53 @@ impl TextInjector {
             }
         }
 
-        unsafe {
-            // Send keystrokes directly to the currently active foreground window 
-            // where the user's cursor is focused, without yanking focus back.
-
-            // Programmatically release modifier keys (Ctrl, Shift, Alt)
-            let modifiers = [
-                VK_LCONTROL, VK_RCONTROL,
-                VK_LSHIFT, VK_RSHIFT,
-                VK_LMENU, VK_RMENU
-            ];
-            let mut modifier_inputs = Vec::new();
-            for &vk in &modifiers {
-                let mut input: INPUT = std::mem::zeroed();
-                input.r#type = INPUT_KEYBOARD;
-                input.Anonymous.ki = KEYBDINPUT {
-                    wVk: vk,
-                    wScan: 0,
-                    dwFlags: KEYEVENTF_KEYUP,
-                    time: 0,
-                    dwExtraInfo: 0,
-                };
-                modifier_inputs.push(input);
+        // Added in 0.2.8: Track whether the captured target window is still active.
+        // Previously, we unconditionally called SendInput, which typing-injected text into whatever
+        // window the user focused next during dictation. Now, if focus switches, we redirect inputs via PostMessageW.
+        let is_target_active = unsafe {
+            use windows_sys::Win32::UI::WindowsAndMessaging::{GetForegroundWindow, GetAncestor, GA_ROOTOWNER};
+            let foreground = GetForegroundWindow();
+            if let Some(target) = self._target_hwnd {
+                if target == 0 {
+                    true
+                } else {
+                    let target_root = GetAncestor(target as _, GA_ROOTOWNER) as isize;
+                    let foreground_root = GetAncestor(foreground, GA_ROOTOWNER) as isize;
+                    target_root == foreground_root || target == foreground as isize
+                }
+            } else {
+                true
             }
-            SendInput(modifier_inputs.len() as u32, modifier_inputs.as_ptr(), size_of::<INPUT>() as i32);
+        };
+
+        unsafe {
+            use windows_sys::Win32::UI::WindowsAndMessaging::PostMessageW;
+
+            if is_target_active {
+                // Send keystrokes directly to the currently active foreground window 
+                // where the user's cursor is focused, without yanking focus back.
+
+                // Programmatically release modifier keys (Ctrl, Shift, Alt)
+                let modifiers = [
+                    VK_LCONTROL, VK_RCONTROL,
+                    VK_LSHIFT, VK_RSHIFT,
+                    VK_LMENU, VK_RMENU
+                ];
+                let mut modifier_inputs = Vec::new();
+                for &vk in &modifiers {
+                    let mut input: INPUT = std::mem::zeroed();
+                    input.r#type = INPUT_KEYBOARD;
+                    input.Anonymous.ki = KEYBDINPUT {
+                        wVk: vk,
+                        wScan: 0,
+                        dwFlags: KEYEVENTF_KEYUP,
+                        time: 0,
+                        dwExtraInfo: 0,
+                    };
+                    modifier_inputs.push(input);
+                }
+                SendInput(modifier_inputs.len() as u32, modifier_inputs.as_ptr(), size_of::<INPUT>() as i32);
+            }
 
             // 2. Send Backspaces for changed characters
             if common_prefix_len < old_text.len() {
@@ -69,28 +92,38 @@ impl TextInjector {
                 println!("[Injection] Pacing {} backspaces", backspace_count);
                 
                 for _ in 0..backspace_count {
-                    let mut input_down: INPUT = std::mem::zeroed();
-                    input_down.r#type = INPUT_KEYBOARD;
-                    input_down.Anonymous.ki = KEYBDINPUT {
-                        wVk: VK_BACK,
-                        wScan: 0,
-                        dwFlags: 0,
-                        time: 0,
-                        dwExtraInfo: 0,
-                    };
-                    let mut input_up: INPUT = std::mem::zeroed();
-                    input_up.r#type = INPUT_KEYBOARD;
-                    input_up.Anonymous.ki = KEYBDINPUT {
-                        wVk: VK_BACK,
-                        wScan: 0,
-                        dwFlags: KEYEVENTF_KEYUP,
-                        time: 0,
-                        dwExtraInfo: 0,
-                    };
-                    
-                    SendInput(1, &input_down, size_of::<INPUT>() as i32);
-                    std::thread::sleep(std::time::Duration::from_millis(5)); // let the down state register
-                    SendInput(1, &input_up, size_of::<INPUT>() as i32);
+                    if is_target_active {
+                        let mut input_down: INPUT = std::mem::zeroed();
+                        input_down.r#type = INPUT_KEYBOARD;
+                        input_down.Anonymous.ki = KEYBDINPUT {
+                            wVk: VK_BACK,
+                            wScan: 0,
+                            dwFlags: 0,
+                            time: 0,
+                            dwExtraInfo: 0,
+                        };
+                        let mut input_up: INPUT = std::mem::zeroed();
+                        input_up.r#type = INPUT_KEYBOARD;
+                        input_up.Anonymous.ki = KEYBDINPUT {
+                            wVk: VK_BACK,
+                            wScan: 0,
+                            dwFlags: KEYEVENTF_KEYUP,
+                            time: 0,
+                            dwExtraInfo: 0,
+                        };
+                        
+                        SendInput(1, &input_down, size_of::<INPUT>() as i32);
+                        std::thread::sleep(std::time::Duration::from_millis(5)); // let the down state register
+                        SendInput(1, &input_up, size_of::<INPUT>() as i32);
+                    } else if let Some(hwnd) = self._target_hwnd {
+                        // Fallback in 0.2.8: Target is inactive/background. Post keyboard/character events directly
+                        // to the target child-control (hwnd) so the dictation still completes in the correct field.
+                        if hwnd != 0 {
+                            PostMessageW(hwnd as _, 0x0100, 0x08, 0); // WM_KEYDOWN VK_BACK
+                            PostMessageW(hwnd as _, 0x0102, 0x08, 0); // WM_CHAR VK_BACK
+                            PostMessageW(hwnd as _, 0x0101, 0x08, 0xC0000001); // WM_KEYUP VK_BACK
+                        }
+                    }
                     std::thread::sleep(std::time::Duration::from_millis(self.typing_delay)); // interval between backspaces
                 }
 
@@ -104,28 +137,35 @@ impl TextInjector {
             if !new_part.is_empty() {
                 println!("[Injection] Pacing type for: '{}'", new_part);
                 for c in new_part.encode_utf16() {
-                    let mut input_down: INPUT = std::mem::zeroed();
-                    input_down.r#type = INPUT_KEYBOARD;
-                    input_down.Anonymous.ki = KEYBDINPUT {
-                        wVk: 0,
-                        wScan: c,
-                        dwFlags: KEYEVENTF_UNICODE,
-                        time: 0,
-                        dwExtraInfo: 0,
-                    };
-                    let mut input_up: INPUT = std::mem::zeroed();
-                    input_up.r#type = INPUT_KEYBOARD;
-                    input_up.Anonymous.ki = KEYBDINPUT {
-                        wVk: 0,
-                        wScan: c,
-                        dwFlags: KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
-                        time: 0,
-                        dwExtraInfo: 0,
-                    };
-                    
-                    SendInput(1, &input_down, size_of::<INPUT>() as i32);
-                    std::thread::sleep(std::time::Duration::from_millis(5)); // let the down state register
-                    SendInput(1, &input_up, size_of::<INPUT>() as i32);
+                    if is_target_active {
+                        let mut input_down: INPUT = std::mem::zeroed();
+                        input_down.r#type = INPUT_KEYBOARD;
+                        input_down.Anonymous.ki = KEYBDINPUT {
+                            wVk: 0,
+                            wScan: c,
+                            dwFlags: KEYEVENTF_UNICODE,
+                            time: 0,
+                            dwExtraInfo: 0,
+                        };
+                        let mut input_up: INPUT = std::mem::zeroed();
+                        input_up.r#type = INPUT_KEYBOARD;
+                        input_up.Anonymous.ki = KEYBDINPUT {
+                            wVk: 0,
+                            wScan: c,
+                            dwFlags: KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
+                            time: 0,
+                            dwExtraInfo: 0,
+                        };
+                        
+                        SendInput(1, &input_down, size_of::<INPUT>() as i32);
+                        std::thread::sleep(std::time::Duration::from_millis(5)); // let the down state register
+                        SendInput(1, &input_up, size_of::<INPUT>() as i32);
+                    } else if let Some(hwnd) = self._target_hwnd {
+                        // Fallback in 0.2.8: Post characters directly to the target background window/control
+                        if hwnd != 0 {
+                            PostMessageW(hwnd as _, 0x0102, c as usize, 0); // WM_CHAR
+                        }
+                    }
                     std::thread::sleep(std::time::Duration::from_millis(self.typing_delay)); // interval between characters
                 }
             }

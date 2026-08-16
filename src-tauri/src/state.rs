@@ -21,6 +21,9 @@ pub enum AudioStatus {
     Finalizing,
     Idle,
     Level { level: f32 },
+    Busy { message: String },
+    #[allow(dead_code)]
+    Warning { duration: f32 },
 }
 
 pub struct AppState {

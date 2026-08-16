@@ -203,6 +203,40 @@
             </div>
           </div>
 
+          <!-- Dynamic Whisper Model Update Section -->
+          <div class="settings-section" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
+            <h2>Whisper AI Model File Update</h2>
+            <div class="form-group">
+              <label>Active Model Path</label>
+              <div style="display: flex; gap: 8px; margin-top: 6px;">
+                <input type="text" id="model-path-display" readonly style="flex-grow: 1; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 12px; border-radius: 6px; color: #aaa; font-size: 0.8rem; outline: none;" value="Loading...">
+                <button type="button" id="change-model-btn" class="action-btn" style="padding: 0 16px; height: 36px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; flex-shrink: 0; background: var(--accent-color); border: none; color: #000; font-weight: bold;">Change Model...</button>
+              </div>
+              <span class="hint" id="model-status-hint">Active model. You can upload a custom GGML Whisper model (.bin) to replace the default tiny.en.</span>
+            </div>
+            <div class="form-group" id="reset-model-container" style="display: none; margin-top: 10px;">
+              <button type="button" id="reset-model-btn" class="action-btn" style="background: rgba(255, 69, 58, 0.15); border: 1px solid rgba(255, 69, 58, 0.35); color: #ff453a; padding: 6px 12px; font-size: 0.75rem; border-radius: 6px; cursor: pointer;">Reset to Embedded Model</button>
+            </div>
+          </div>
+
+          <!-- Application Updates Section -->
+          <div class="settings-section" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
+            <h2>Application Self-Updates</h2>
+            <div class="form-group">
+              <label>VAKH Version Info</label>
+              <div style="display: flex; gap: 12px; margin-top: 6px; align-items: center;">
+                <span style="font-size: 0.85rem; color: #aaa; font-weight: bold;" id="app-version-display">v0.2.0</span>
+                <button type="button" id="check-updates-btn" class="action-btn" style="padding: 0 16px; height: 36px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; flex-shrink: 0; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff;">Check for Updates</button>
+              </div>
+              <span class="hint" id="update-status-hint">Check if a new version of the VAKH desktop app is available.</span>
+            </div>
+            <div class="form-group" id="update-download-container" style="display: none; margin-top: 15px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="font-weight: bold; color: var(--accent-color); font-size: 0.85rem;" id="update-version-title">New Update Available!</div>
+              <div style="font-size: 0.75rem; color: #bbb; margin-top: 6px; line-height: 1.4;" id="update-changelog-text">Changelog details...</div>
+              <button type="button" id="install-update-btn" class="action-btn" style="margin-top: 12px; padding: 0 16px; height: 32px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; background: var(--accent-color); border: none; color: #000; font-weight: bold;">Download & Install Now</button>
+            </div>
+          </div>
+
           <div class="form-actions">
             <span id="settings-status" class="status-msg"></span>
             <button type="submit" class="action-btn save-btn">Save Configurations</button>

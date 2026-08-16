@@ -235,6 +235,27 @@ function filterLogs(query) {
 // ------------------------------------------------------------
 // 3. Settings Tab (VAD & Key Injection Configurations)
 // ------------------------------------------------------------
+async function syncModelStatus() {
+  try {
+    const status = await invoke("get_model_status");
+    const pathDisplay = document.querySelector("#model-path-display");
+    const statusHint = document.querySelector("#model-status-hint");
+    const resetContainer = document.querySelector("#reset-model-container");
+
+    if (status.is_custom) {
+      pathDisplay.value = status.path;
+      statusHint.innerText = `Using custom model (${status.size_mb} MB). Restart VAKH to load.`;
+      resetContainer.style.display = "block";
+    } else {
+      pathDisplay.value = status.path;
+      statusHint.innerText = `Active model. You can upload a custom GGML Whisper model (.bin) to replace the default tiny.en.`;
+      resetContainer.style.display = "none";
+    }
+  } catch (err) {
+    console.error("Failed to sync model status:", err);
+  }
+}
+
 function initSettingsTab() {
   const form = document.querySelector("#settings-form");
   const silenceSlider = document.querySelector("#setting-silence");
@@ -280,6 +301,109 @@ function initSettingsTab() {
     } catch (err) {
       statusEl.innerText = "Failed to save settings: " + err;
       statusEl.className = "status-msg error";
+    }
+  });
+
+  // Whisper Model Updates Event Listeners
+  const changeModelBtn = document.querySelector("#change-model-btn");
+  const resetModelBtn = document.querySelector("#reset-model-btn");
+  const statusEl = document.querySelector("#settings-status");
+
+  changeModelBtn.addEventListener("click", async () => {
+    try {
+      const msg = await invoke("change_model");
+      statusEl.innerText = msg;
+      statusEl.className = "status-msg success";
+      await syncModelStatus();
+      setTimeout(() => {
+        statusEl.className = "status-msg";
+      }, 5000);
+    } catch (err) {
+      if (err !== "cancelled") {
+        statusEl.innerText = "Failed to change model: " + err;
+        statusEl.className = "status-msg error";
+        setTimeout(() => {
+          statusEl.className = "status-msg";
+        }, 5000);
+      }
+    }
+  });
+
+  resetModelBtn.addEventListener("click", async () => {
+    try {
+      const msg = await invoke("reset_model");
+      statusEl.innerText = msg;
+      statusEl.className = "status-msg success";
+      await syncModelStatus();
+      setTimeout(() => {
+        statusEl.className = "status-msg";
+      }, 5000);
+    } catch (err) {
+      statusEl.innerText = "Failed to reset model: " + err;
+      statusEl.className = "status-msg error";
+      setTimeout(() => {
+        statusEl.className = "status-msg";
+      }, 5000);
+    }
+  });
+
+  // Load initial model status
+  syncModelStatus();
+
+  // Application Update Event Listeners
+  const checkUpdatesBtn = document.querySelector("#check-updates-btn");
+  const updateContainer = document.querySelector("#update-download-container");
+  const updateTitle = document.querySelector("#update-version-title");
+  const updateChangelog = document.querySelector("#update-changelog-text");
+  const installUpdateBtn = document.querySelector("#install-update-btn");
+  let activeDownloadUrl = null;
+
+  checkUpdatesBtn.addEventListener("click", async () => {
+    checkUpdatesBtn.innerText = "Checking...";
+    checkUpdatesBtn.disabled = true;
+    try {
+      const res = await invoke("check_for_updates");
+      if (res.has_update) {
+        updateTitle.innerText = `New Version Available: ${res.latest_version} (Current: ${res.current_version})`;
+        updateChangelog.innerText = res.changelog;
+        activeDownloadUrl = res.download_url;
+        updateContainer.style.display = "block";
+        
+        statusEl.innerText = "Updates found!";
+        statusEl.className = "status-msg success";
+      } else {
+        updateContainer.style.display = "none";
+        statusEl.innerText = "VAKH is up to date!";
+        statusEl.className = "status-msg success";
+      }
+      setTimeout(() => {
+        statusEl.className = "status-msg";
+      }, 4000);
+    } catch (err) {
+      statusEl.innerText = "Check update failed: " + err;
+      statusEl.className = "status-msg error";
+      setTimeout(() => {
+        statusEl.className = "status-msg";
+      }, 5000);
+    } finally {
+      checkUpdatesBtn.innerText = "Check for Updates";
+      checkUpdatesBtn.disabled = false;
+    }
+  });
+
+  installUpdateBtn.addEventListener("click", async () => {
+    if (!activeDownloadUrl) return;
+    installUpdateBtn.innerText = "Downloading & Installing...";
+    installUpdateBtn.disabled = true;
+    try {
+      statusEl.innerText = "Downloading update... The app will close and restart automatically.";
+      statusEl.className = "status-msg success";
+      await invoke("download_and_install_update", { url: activeDownloadUrl });
+    } catch (err) {
+      statusEl.innerText = "Installation failed: " + err;
+      statusEl.className = "status-msg error";
+      installUpdateBtn.innerText = "Download & Install Now";
+      installUpdateBtn.disabled = false;
     }
   });
 }

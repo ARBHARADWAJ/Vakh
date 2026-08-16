@@ -17,7 +17,8 @@
         "transparent": true,
         "decorations": false,
         "alwaysOnTop": true,
-        "resizable": false
+        "resizable": false,
+        "visible": false
       },
       {
         "label": "dashboard",

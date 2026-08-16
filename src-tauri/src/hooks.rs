@@ -5,10 +5,48 @@ use crate::state::{AppState, VakhState};
 use crate::perform_state_transition;
 use crate::db::Database;
 pub use windows_sys::Win32::UI::WindowsAndMessaging::{
-    GetForegroundWindow, GetWindowThreadProcessId, GetWindowTextW, GetClassNameW, GetWindow, GW_HWNDNEXT, IsWindowVisible
+    GetForegroundWindow, GetWindowThreadProcessId, GetWindowTextW, GetClassNameW, GetWindow, GW_HWNDNEXT, IsWindowVisible,
+    GetGUIThreadInfo, GUITHREADINFO
 };
 use windows_sys::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW, PROCESS_NAME_WIN32};
 use windows_sys::Win32::Foundation::{CloseHandle, FALSE};
+
+// Added in 0.2.8: Captures the specifically focused child-control window (e.g. text area, input box)
+// using GetGUIThreadInfo instead of just the top-level parent window.
+// Previously, we only used get_foreground_window_ignoring_vakh() which fetched the main application window,
+// causing typing injection to fail or mismatch if a complex app had multiple sub-controls/embedded text panes.
+pub fn get_focused_control_hwnd() -> isize {
+    unsafe {
+        let mut info: GUITHREADINFO = std::mem::zeroed();
+        info.cbSize = std::mem::size_of::<GUITHREADINFO>() as u32;
+        let result = GetGUIThreadInfo(0, &mut info);
+        println!("[Hooks] GetGUIThreadInfo result: {}, hwndFocus: {}", result, info.hwndFocus);
+        if result != 0 && info.hwndFocus != 0 {
+            // Verify the focused control does not belong to VAKH itself
+            let (title, class) = get_window_details(info.hwndFocus as isize);
+            let title_lower = title.to_lowercase();
+            let class_lower = class.to_lowercase();
+            let proc_name = get_process_name(info.hwndFocus as isize)
+                .unwrap_or_else(|| "".to_string())
+                .to_lowercase();
+            let is_vakh = title_lower.contains("vakh") 
+                || class_lower.contains("tauri") 
+                || proc_name.contains("vakh")
+                || proc_name.contains("tauri");
+            if is_vakh {
+                let fg = get_foreground_window_ignoring_vakh();
+                println!("[Hooks] Focused control is VAKH. Falling back to foreground ignoring VAKH: {}", fg);
+                fg
+            } else {
+                info.hwndFocus
+            }
+        } else {
+            let fg = get_foreground_window_ignoring_vakh();
+            println!("[Hooks] No focused control. Using foreground ignoring VAKH: {}", fg);
+            fg
+        }
+    }
+}
 
 pub fn get_foreground_window_ignoring_vakh() -> isize {
     unsafe {
@@ -88,31 +126,46 @@ pub fn start_hotkey_listener(handle: AppHandle, state: Arc<Mutex<AppState>>, db:
     let mut last_ctrl_press = Instant::now() - Duration::from_secs(10);
     
     std::thread::spawn(move || {
+        println!("[Hooks] Global key listener thread started.");
         if let Err(error) = listen(move |event| {
-            if let EventType::KeyPress(Key::ControlLeft) | EventType::KeyPress(Key::ControlRight) = event.event_type {
-                let now = Instant::now();
-                if now.duration_since(last_ctrl_press) < Duration::from_millis(400) {
-                    println!("Double Ctrl detected!");
-                    
-                    // Capture active window HWND (ignoring VAKH itself)
-                    let hwnd = get_foreground_window_ignoring_vakh();
-                    let proc_name = get_process_name(hwnd as isize).unwrap_or_else(|| "Unknown".to_string());
-                    println!("[Hooks] Captured HWND: {} ({})", hwnd, proc_name);
-                    
-                    {
-                        let mut app_state = state.lock().unwrap_or_else(|e| e.into_inner());
-                        if app_state.current_state == VakhState::Idle {
-                            app_state.target_hwnd = Some(hwnd as isize);
+            if let EventType::KeyPress(key) = event.event_type {
+                println!("[Hooks] KeyPress event: {:?}", key);
+                if key == Key::ControlLeft || key == Key::ControlRight {
+                    let now = Instant::now();
+                    let diff = now.duration_since(last_ctrl_press);
+                    println!("[Hooks] Ctrl press detected (diff={:?})", diff);
+                    if diff < Duration::from_millis(400) {
+                        println!("[Hooks] Double Ctrl speed match (<400ms)!");
+                        
+                        // Capture active focused control HWND (ignoring VAKH itself)
+                        let hwnd = get_focused_control_hwnd();
+                        let proc_name = get_process_name(hwnd as isize).unwrap_or_else(|| "Unknown".to_string());
+                        println!("[Hooks] Captured HWND: {} ({})", hwnd, proc_name);
+                        
+                        {
+                            let mut app_state = state.lock().unwrap_or_else(|e| e.into_inner());
+                            if app_state.current_state == VakhState::Idle {
+                                app_state.target_hwnd = Some(hwnd as isize);
+                            }
                         }
-                    }
 
-                    // Perform transition
-                    perform_state_transition(handle.clone(), Arc::clone(&state), Arc::clone(&db), Arc::clone(&ctx), config.clone());
-                    
-                    // Reset
-                    last_ctrl_press = now - Duration::from_secs(10);
-                } else {
-                    last_ctrl_press = now;
+                        // Perform transition asynchronously to prevent deadlocking the global hook thread
+                        // during cpal audio stream teardown/pause operations.
+                        let handle_clone = handle.clone();
+                        let state_clone = Arc::clone(&state);
+                        let db_clone = Arc::clone(&db);
+                        let ctx_clone = Arc::clone(&ctx);
+                        let config_clone = config.clone();
+                        std::thread::spawn(move || {
+                            println!("[Hooks] Spawning perform_state_transition thread...");
+                            perform_state_transition(handle_clone, state_clone, db_clone, ctx_clone, config_clone);
+                        });
+                        
+                        // Reset
+                        last_ctrl_press = now - Duration::from_secs(10);
+                    } else {
+                        last_ctrl_press = now;
+                    }
                 }
             }
         }) {

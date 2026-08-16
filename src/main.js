@@ -104,6 +104,7 @@ window.addEventListener("DOMContentLoaded", () => {
       appEl.classList.remove("is-finalizing");
       appEl.classList.remove("is-processing");
       appEl.classList.remove("is-listening");
+      appEl.classList.remove("is-busy");
       appEl.classList.add("is-speaking");
       statusTextEl.innerText = "SPEAKING";
       setToggleActive(true);
@@ -112,6 +113,7 @@ window.addEventListener("DOMContentLoaded", () => {
       appEl.classList.remove("is-finalizing");
       appEl.classList.remove("is-processing");
       appEl.classList.remove("is-speaking");
+      appEl.classList.remove("is-busy");
       appEl.classList.add("is-listening");
       statusTextEl.innerText = "LISTENING";
       setToggleActive(true);
@@ -119,6 +121,7 @@ window.addEventListener("DOMContentLoaded", () => {
       appEl.classList.remove("is-warning");
       appEl.classList.remove("is-listening");
       appEl.classList.remove("is-speaking");
+      appEl.classList.remove("is-busy");
       appEl.classList.add("is-finalizing");
       statusTextEl.innerText = "FINALIZING...";
       setToggleActive(true);   // still processing — keep stop icon
@@ -126,10 +129,23 @@ window.addEventListener("DOMContentLoaded", () => {
       appEl.classList.remove("is-warning");
       appEl.classList.remove("is-listening");
       appEl.classList.remove("is-speaking");
+      appEl.classList.remove("is-busy");
       appEl.classList.add("is-processing");
       statusTextEl.innerText = "PROCESSING...";
       setToggleActive(true);
+    } else if (data.status === "busy") {
+      appEl.classList.remove("is-warning");
+      appEl.classList.remove("is-listening");
+      appEl.classList.remove("is-speaking");
+      appEl.classList.remove("is-finalizing");
+      appEl.classList.remove("is-processing");
+      appEl.classList.add("is-busy");
+      statusTextEl.innerText = data.message.toUpperCase();
+      setToggleActive(true);
     } else if (data.status === "idle") {
+      const wasFinalizing = appEl.classList.contains("is-finalizing") || appEl.classList.contains("is-processing") || appEl.classList.contains("is-busy");
+      
+      appEl.classList.remove("is-busy");
       updateUI("Idle");
       setToggleActive(false);  // fully idle — show play icon
       // Reset bars to default
@@ -137,6 +153,21 @@ window.addEventListener("DOMContentLoaded", () => {
         bar.style.height = "6px";
         bar.style.background = "#636366";
       });
+
+      if (wasFinalizing) {
+        appEl.classList.add("border-flash");
+        setTimeout(() => {
+          appEl.classList.remove("border-flash");
+        }, 1200);
+        statusTextEl.innerText = "PLEASE CONTINUE";
+        
+        // Reset to normal text after 3 seconds
+        setTimeout(() => {
+          if (statusTextEl.innerText === "PLEASE CONTINUE") {
+            statusTextEl.innerText = "PAUSED";
+          }
+        }, 3000);
+      }
     } else if (data.status === "level") {
       // Audio level for visualization - animate bars based on level
       if (appEl.classList.contains("is-listening") || appEl.classList.contains("is-speaking")) {
@@ -194,7 +225,7 @@ function updateUI(state) {
 }
 
 // Swap state class without wiping theme classes
-const STATE_CLASSES = ["is-listening","is-speaking","is-paused","is-warning","is-finalizing","is-processing"];
+const STATE_CLASSES = ["is-listening","is-speaking","is-paused","is-warning","is-finalizing","is-processing","is-busy"];
 function setStateClass(cls) {
   STATE_CLASSES.forEach(c => appEl.classList.remove(c));
   appEl.classList.add(cls);

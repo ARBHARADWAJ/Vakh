@@ -13,6 +13,7 @@ use state::{AppState, VakhState, SendWrapper, AudioStatus};
 use config::AppConfig;
 use std::sync::{Arc, Mutex};
 use tauri::{State, Manager, Emitter, AppHandle};
+use tauri_plugin_notification::NotificationExt;
 use std::sync::mpsc::{channel, Sender};
 use whisper_rs::{WhisperContext, WhisperContextParameters, FullParams, SamplingStrategy};
 use injection::TextInjector;
@@ -44,11 +45,21 @@ pub fn perform_state_transition(
 
     let (_next_state, start_audio) = {
         let mut app_state = state.lock().unwrap_or_else(|e| e.into_inner());
+        
+        // Guard: If the app is currently in Flushing (Finalizing) state, prevent starting a new recording.
+        // We emit a busy warning status to inform the user.
+        if app_state.current_state == VakhState::Flushing {
+            let _ = app_handle.emit("vakh-status", AudioStatus::Busy { 
+                message: "the dictation is in process, kindly wait".to_string() 
+            });
+            return;
+        }
+
         let (next_state, start_audio) = match app_state.current_state {
             VakhState::Idle       => (VakhState::Listening, true),
             VakhState::Listening  => (VakhState::Flushing,  false),
             VakhState::Processing => (VakhState::Flushing,  false),
-            VakhState::Flushing   => (VakhState::Idle,      false),
+            VakhState::Flushing   => (VakhState::Flushing,  false), // guarded above
         };
         app_state.transition_to(next_state);
         (next_state, start_audio)
@@ -83,10 +94,12 @@ pub fn perform_state_transition(
                 let (target_app_name, target_hwnd) = {
                     let mut s = state_for_thread.lock().unwrap_or_else(|e| e.into_inner());
                     
-                    // Use existing HWND if captured by hotkey, otherwise find it
+                    // Use existing HWND if captured by hotkey, otherwise resolve it.
+                    // Previously: Resolved via hooks::get_foreground_window_ignoring_vakh() (retrieved top-level window).
+                    // Now: Resolves specifically to the focused child-control control via hooks::get_focused_control_hwnd().
                     let hwnd = match s.target_hwnd {
                         Some(h) if h != 0 => h,
-                        _ => hooks::get_foreground_window_ignoring_vakh(),
+                        _ => hooks::get_focused_control_hwnd(),
                     };
 
                     let name = hooks::get_process_name(hwnd)
@@ -139,6 +152,11 @@ pub fn perform_state_transition(
                         };
 
                         let mut has_transcribed_periodic = false;
+                        // Added in 0.2.8: Accumulate text from prior chunks within the same dictation session.
+                        // Previously: Whisper transcribed each chunk in isolation, losing semantic context (which
+                        // caused spelling inconsistencies and ignored context at 15s boundaries).
+                        // Now: We pass accumulated text as an initial prompt to improve context awareness.
+                        let mut accumulated_session_text = String::new();
 
                         loop {
                             // 1. Collect all available raw audio
@@ -149,7 +167,12 @@ pub fn perform_state_transition(
                             // 2. Periodic 15-second transcribing & appending
                             if full_session_audio.len() >= 16000 * 15 {
                                 println!("[Worker] Periodic 15s append trigger: {} samples", full_session_audio.len());
-                                if let Ok(_) = ctx_state.full(final_params.clone(), &full_session_audio) {
+                                let mut chunk_params = final_params.clone();
+                                if !accumulated_session_text.is_empty() {
+                                    // Seed next chunk's transcription with the accumulated context
+                                    chunk_params.set_initial_prompt(&accumulated_session_text);
+                                }
+                                if let Ok(_) = ctx_state.full(chunk_params, &full_session_audio) {
                                     let chunk_text = collect_segments(&mut ctx_state);
                                     println!("[Worker] Periodic transcribed text: '{}'", chunk_text);
                                     if !chunk_text.is_empty() {
@@ -157,6 +180,11 @@ pub fn perform_state_transition(
                                         inj.inject_draft(&chunk_text);
                                         inj.commit();
                                         let _ = db_for_worker.log_dictation(&chunk_text, Some(&app_name_for_worker));
+                                        
+                                        if !accumulated_session_text.is_empty() {
+                                            accumulated_session_text.push(' ');
+                                        }
+                                        accumulated_session_text.push_str(&chunk_text);
                                         has_transcribed_periodic = true;
                                     }
                                 }
@@ -175,7 +203,12 @@ pub fn perform_state_transition(
                                             8_000  // 0.5s minimum for short single dictation
                                         };
                                         if full_session_audio.len() >= min_samples {
-                                            if let Ok(_) = ctx_state.full(final_params.clone(), &full_session_audio) {
+                                            let mut chunk_params = final_params.clone();
+                                            if !accumulated_session_text.is_empty() {
+                                                // Seed final chunk transcription with accumulated context
+                                                chunk_params.set_initial_prompt(&accumulated_session_text);
+                                            }
+                                            if let Ok(_) = ctx_state.full(chunk_params, &full_session_audio) {
                                                 final_text = collect_segments(&mut ctx_state);
                                             }
                                         }
@@ -283,9 +316,10 @@ pub fn perform_state_transition(
             let _ = stream.pause(); // ensure mic hardware stops
             drop(stream);
         }
-        app_state.transition_to(VakhState::Idle);
-        app_state.target_hwnd = None;
-        let _ = app_handle.emit("vakh-status", AudioStatus::Idle);
+        // Change in 0.2.8: Transition to Flushing during stopping. 
+        // The background thread loop will break immediately and run run_finalize, 
+        // which will transition to Idle and emit AudioStatus::Idle upon completion.
+        app_state.transition_to(VakhState::Flushing);
     }
 }
 
@@ -424,6 +458,165 @@ fn hide_dashboard(handle: AppHandle) {
     }
 }
 
+#[derive(Debug, serde::Serialize, Clone)]
+struct ModelStatus {
+    is_custom: bool,
+    path: String,
+    size_mb: f64,
+}
+
+#[tauri::command]
+fn get_model_status() -> ModelStatus {
+    let mut model_path = std::env::var("LOCALAPPDATA")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")));
+    model_path.push("VAKH");
+    model_path.push("model.bin");
+
+    if model_path.exists() {
+        let size_bytes = std::fs::metadata(&model_path).map(|m| m.len()).unwrap_or(0);
+        let size_mb = (size_bytes as f64) / (1024.0 * 1024.0);
+        ModelStatus {
+            is_custom: true,
+            path: model_path.to_string_lossy().to_string(),
+            size_mb: (size_mb * 100.0).round() / 100.0,
+        }
+    } else {
+        ModelStatus {
+            is_custom: false,
+            path: "Embedded (tiny.en.bin)".to_string(),
+            size_mb: 74.1,
+        }
+    }
+}
+
+#[tauri::command]
+fn change_model() -> Result<String, String> {
+    unsafe {
+        let mut file_name: [u16; 260] = [0; 260];
+        let mut ofn: windows_sys::Win32::UI::Controls::Dialogs::OPENFILENAMEW = std::mem::zeroed();
+        ofn.lStructSize = std::mem::size_of::<windows_sys::Win32::UI::Controls::Dialogs::OPENFILENAMEW>() as u32;
+        ofn.lpstrFile = file_name.as_mut_ptr();
+        ofn.nMaxFile = file_name.len() as u32;
+        
+        let filter = "GGML Whisper Model (*.bin)\0*.bin\0All Files (*.*)\0*.*\0\0";
+        let filter_u16: Vec<u16> = filter.encode_utf16().collect();
+        ofn.lpstrFilter = filter_u16.as_ptr();
+        ofn.nFilterIndex = 1;
+        ofn.Flags = 0x00080000 | 0x00001000 | 0x00000800; // OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST
+        
+        let success = windows_sys::Win32::UI::Controls::Dialogs::GetOpenFileNameW(&mut ofn);
+        if success != 0 {
+            let len = file_name.iter().position(|&x| x == 0).unwrap_or(file_name.len());
+            let path_str = String::from_utf16_lossy(&file_name[..len]);
+            let src_path = std::path::PathBuf::from(path_str);
+
+            let mut dest_path = std::env::var("LOCALAPPDATA")
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(|_| std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")));
+            dest_path.push("VAKH");
+            let _ = std::fs::create_dir_all(&dest_path);
+            dest_path.push("model.bin");
+
+            // Copy selected file
+            std::fs::copy(&src_path, &dest_path)
+                .map_err(|e| format!("Failed to copy model file: {}", e))?;
+
+            Ok("Model updated successfully. Please restart VAKH to load the new model.".to_string())
+        } else {
+            Err("cancelled".to_string())
+        }
+    }
+}
+
+#[tauri::command]
+fn reset_model() -> Result<String, String> {
+    let mut model_path = std::env::var("LOCALAPPDATA")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")));
+    model_path.push("VAKH");
+    model_path.push("model.bin");
+
+    if model_path.exists() {
+        std::fs::remove_file(model_path)
+            .map_err(|e| format!("Failed to delete custom model: {}", e))?;
+        Ok("Model reset to embedded. Please restart VAKH to apply changes.".to_string())
+    } else {
+        Ok("Already using embedded model.".to_string())
+    }
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
+struct UpdateCheckResult {
+    has_update: bool,
+    current_version: String,
+    latest_version: String,
+    download_url: String,
+    changelog: String,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct RemoteUpdateInfo {
+    version: String,
+    url: String,
+    changelog: Option<String>,
+}
+
+#[tauri::command]
+fn check_for_updates() -> Result<UpdateCheckResult, String> {
+    let current_version = "0.2.0".to_string(); // Current VAKH version
+    // Endpoint on user's GitHub repository for checking the updater.json manifest
+    let update_url = "https://raw.githubusercontent.com/ARBHARADWAJ/Vakh/main/updater.json";
+    
+    let response = ureq::get(update_url)
+        .timeout(std::time::Duration::from_secs(5))
+        .call()
+        .map_err(|e| format!("Failed to check updates: {}", e))?;
+        
+    let remote_info: RemoteUpdateInfo = response.into_json::<RemoteUpdateInfo>()
+        .map_err(|e| format!("Failed to parse update info: {}", e))?;
+        
+    let has_update = remote_info.version != current_version;
+    
+    Ok(UpdateCheckResult {
+        has_update,
+        current_version,
+        latest_version: remote_info.version,
+        download_url: remote_info.url,
+        changelog: remote_info.changelog.unwrap_or_else(|| "No changelog provided.".to_string()),
+    })
+}
+
+#[tauri::command]
+fn download_and_install_update(url: String) -> Result<(), String> {
+    let mut temp_path = std::env::temp_dir();
+    temp_path.push("vakh_setup_update.exe");
+
+    println!("[Updater] Downloading update from {} to {:?}", url, temp_path);
+
+    let response = ureq::get(&url)
+        .timeout(std::time::Duration::from_secs(120)) // 2 min timeout for download
+        .call()
+        .map_err(|e| format!("Failed to request download: {}", e))?;
+
+    let mut file = std::fs::File::create(&temp_path)
+        .map_err(|e| format!("Failed to create local update file: {}", e))?;
+
+    std::io::copy(&mut response.into_reader(), &mut file)
+        .map_err(|e| format!("Failed to save update file: {}", e))?;
+
+    println!("[Updater] Download finished. Spawning installer: {:?}", temp_path);
+
+    // Launch installer asynchronously
+    std::process::Command::new("cmd")
+        .args(&["/C", &temp_path.to_string_lossy()])
+        .spawn()
+        .map_err(|e| format!("Failed to launch update installer: {}", e))?;
+
+    // Terminate VAKH immediately so the installer doesn't hit locked-file errors
+    std::process::exit(0);
+}
+
 #[tauri::command]
 fn minimize_dashboard(handle: AppHandle) {
     if let Some(window) = handle.get_webview_window("dashboard") {
@@ -438,13 +631,40 @@ pub fn run() {
     let database  = Arc::new(Database::init().expect("failed to init db"));
 
     println!("[Whisper] Loading model...");
-    let model_data = include_bytes!("../tiny.en.bin");
+    let mut model_path = std::env::var("LOCALAPPDATA")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")));
+    model_path.push("VAKH");
+    model_path.push("model.bin");
+
+    let mut model_data_vec = Vec::new();
+    let mut use_embedded = true;
+    if model_path.exists() {
+        println!("[Whisper] Loading external model from {:?}", model_path);
+        match std::fs::read(&model_path) {
+            Ok(data) => {
+                model_data_vec = data;
+                use_embedded = false;
+            }
+            Err(e) => {
+                eprintln!("[Whisper Warning] Failed to read external model: {}. Falling back to embedded.", e);
+            }
+        }
+    }
+
+    let embedded_data = include_bytes!("../tiny.en.bin");
+    let model_bytes: &[u8] = if use_embedded {
+        embedded_data
+    } else {
+        &model_data_vec
+    };
+
     let ctx = Arc::new(
         WhisperContext::new_from_buffer_with_params(
-            model_data,
+            model_bytes,
             WhisperContextParameters::default(),
         )
-        .expect("failed to load embedded model"),
+        .expect("failed to load Whisper model"),
     );
     println!("[Whisper] Model loaded successfully");
 
@@ -457,6 +677,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 if window.label() == "dashboard" {
@@ -493,12 +714,17 @@ pub fn run() {
                                 window_size.width, window_size.height, x, y);
 
                             let _ = window_clone.set_position(tauri::PhysicalPosition { x, y });
-                            let _ = window_clone.show();
-                            let _ = window_clone.set_focus();
                         }
                     }
                 });
             }
+
+            // Send notification that the app is running in the background
+            let _ = app.notification()
+                .builder()
+                .title("VAKH")
+                .body("Running in the background. Double-press Left or Right Ctrl to dictate.")
+                .show();
 
             app.manage(AppManagedState(
                 Arc::clone(&app_state),
@@ -520,7 +746,12 @@ pub fn run() {
             open_dashboard,
             hide_dashboard,
             minimize_dashboard,
-            start_dragging
+            start_dragging,
+            get_model_status,
+            change_model,
+            reset_model,
+            check_for_updates,
+            download_and_install_update
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
